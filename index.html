@@ -7,597 +7,405 @@
     <link rel="stylesheet" href="/src/client/style.css">
 </head>
 <body>
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <h1>GRC Agent</h1>
-            <p class="subtitle">Compliance Assistant</p>
+    <!-- Tenant Login / Client Selection Screen -->
+    <div id="tenantScreen" class="tenant-screen">
+        <div class="tenant-container">
+            <div class="tenant-header">
+                <h1>GRC Agent</h1>
+                <p>Governance, Risk & Compliance Platform</p>
+            </div>
+            <div class="tenant-login">
+                <h2>Consultant Login</h2>
+                <div class="form-group">
+                    <label for="consultantName">Your Name</label>
+                    <input type="text" id="consultantName" placeholder="e.g., Jane Smith" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label for="consultantEmail">Email</label>
+                    <input type="email" id="consultantEmail" placeholder="e.g., jane@company.com" class="form-input" />
+                </div>
+                <hr style="margin:20px 0; border-color:var(--border-color);" />
+                <h3>Select or Create Client Workspace</h3>
+                <div id="clientList" class="client-list"></div>
+                <div class="form-group" style="margin-top:16px;">
+                    <label for="newClientName">Create New Client</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="newClientName" placeholder="Client / Organization name" class="form-input" style="flex:1;" />
+                        <button class="btn btn-primary" id="createClientBtn">+ Create</button>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <nav class="nav">
-            <button class="nav-item active" data-page="chat">
-                <span class="icon">💬</span>
-                <span>Chat</span>
-            </button>
-            <button class="nav-item" data-page="policies">
-                <span class="icon">📋</span>
-                <span>Policies</span>
-            </button>
-            <button class="nav-item" data-page="plans">
-                <span class="icon">📊</span>
-                <span>Plans</span>
-            </button>
-            <button class="nav-item" data-page="frameworks">
-                <span class="icon">🔗</span>
-                <span>Frameworks</span>
-            </button>
-            <button class="nav-item" data-page="controls">
-                <span class="icon">🎛️</span>
-                <span>Controls</span>
-            </button>
-            <button class="nav-item" data-page="procedures">
-                <span class="icon">📝</span>
-                <span>Procedures</span>
-            </button>
-            <button class="nav-item" data-page="analytics">
-                <span class="icon">📈</span>
-                <span>Analytics</span>
-            </button>
-        </nav>
+    <!-- Main Application (hidden until client selected) -->
+    <div id="appContainer" style="display:none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>GRC Agent</h1>
+                <p class="subtitle">Compliance Assistant</p>
+                <div id="activeClientBadge" class="client-badge"></div>
+            </div>
 
-        <div class="sidebar-footer">
-            <button class="btn btn-small" id="settingsBtn">⚙️ Settings</button>
-            <button class="btn btn-small" id="helpBtn">❓ Help</button>
-        </div>
-    </aside>
+            <nav class="nav">
+                <button class="nav-item active" data-page="chat"><span class="icon">💬</span><span>Chat</span></button>
+                <button class="nav-item" data-page="policies"><span class="icon">📋</span><span>Policies</span></button>
+                <button class="nav-item" data-page="plans"><span class="icon">📊</span><span>Plans</span></button>
+                <button class="nav-item" data-page="frameworks"><span class="icon">🔧</span><span>Frameworks</span></button>
+                <button class="nav-item" data-page="controls"><span class="icon">🛡️</span><span>Controls</span></button>
+                <button class="nav-item" data-page="procedures"><span class="icon">📝</span><span>Procedures</span></button>
+                <button class="nav-item" data-page="documents"><span class="icon">📁</span><span>Documents</span></button>
+                <button class="nav-item" data-page="analytics"><span class="icon">📈</span><span>Analytics</span></button>
+            </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Chat Page -->
-        <section id="chat-page" class="page active">
-            <header class="page-header">
-                <h2>Chat Interface</h2>
-                <p>Talk with the GRC Agent about your compliance needs</p>
-            </header>
+            <div class="sidebar-footer">
+                <button class="btn btn-small" id="switchClientBtn">🔄 Switch Client</button>
+                <button class="btn btn-small" id="settingsBtn">⚙️ Settings</button>
+                <button class="btn btn-small" id="helpBtn">❓ Help</button>
+            </div>
+        </aside>
 
-            <div class="chat-container">
-                <div class="messages" id="messages">
-                    <div class="message message-assistant">
-                        <div class="message-content">
-                            <strong>GRC Agent:</strong> Hello! I'm here to help with your GRC needs. What can I assist you with today?
-                        </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Chat Page -->
+            <section id="chat-page" class="page active">
+                <header class="page-header"><h2>Chat Interface</h2><p>Talk with the GRC Agent about your compliance needs</p></header>
+                <div class="chat-container"><div class="messages" id="messages"><div class="message message-assistant"><div class="message-content"><strong>GRC Agent:</strong> Hello! I'm here to help with your GRC needs. What can I assist you with today?</div></div></div></div>
+                <div class="quick-actions" id="quickActions">
+                    <button class="btn btn-small" data-action="Generate an access control policy for NIST CSF">Generate Policy</button>
+                    <button class="btn btn-small" data-action="Analyze our current policies against HIPAA">Analyze Policy</button>
+                    <button class="btn btn-small" data-action="Create a System Security Plan">Create SSP</button>
+                    <button class="btn btn-small" data-action="Show available frameworks">Frameworks</button>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="messageInput" class="chat-input" placeholder="Type your message..." />
+                    <button class="btn btn-primary" id="sendBtn">Send</button>
+                </div>
+            </section>
+
+            <!-- Policies Page -->
+            <section id="policies-page" class="page">
+                <header class="page-header"><h2>Policy Management</h2><p>Upload, assess, and generate compliance policies</p></header>
+                <div class="module-tabs">
+                    <button class="tab-btn active" data-tab="pol-upload">Upload & Assess</button>
+                    <button class="tab-btn" data-tab="pol-gap">Gap Analysis</button>
+                    <button class="tab-btn" data-tab="pol-cap">CAP & POA&M</button>
+                    <button class="tab-btn" data-tab="pol-generate">Generate</button>
+                    <button class="tab-btn" data-tab="pol-library">Library</button>
+                </div>
+                <div id="pol-upload" class="tab-panel active"><div class="panel-body">
+                    <h3>Upload Policy Document for Assessment</h3>
+                    <p class="hint">Upload existing policy documents to assess current state, identify gaps, and generate remediation plans.</p>
+                    <div class="form-group"><label for="polUploadTitle">Document Title</label><input type="text" id="polUploadTitle" placeholder="e.g., Access Control Policy v2.1" class="form-input" /></div>
+                    <div class="form-group"><label for="polUploadFramework">Assess Against Framework</label><select id="polUploadFramework" class="form-input"><option value="nist-csf">NIST CSF 2.0</option><option value="nist-800-53">NIST SP 800-53</option><option value="nist-800-171">NIST SP 800-171</option><option value="cmmc">CMMC 2.0</option><option value="hipaa">HIPAA</option><option value="soc2">SOC 2</option><option value="pci-dss">PCI DSS 4.0</option><option value="cjis">CJIS</option><option value="gdpr">GDPR</option><option value="ccpa">CCPA</option><option value="fedramp">FedRAMP</option><option value="hitrust">HITRUST CSF</option><option value="nydfs">NYDFS</option></select></div>
+                    <div class="form-group"><label>Document Content</label>
+                        <div class="upload-toggle"><button class="toggle-btn active" data-mode="paste" data-target="pol">Paste Text</button><button class="toggle-btn" data-mode="file" data-target="pol">Upload File</button></div>
+                        <div id="pol-paste-area"><textarea id="polUploadContent" rows="12" class="form-input mono" placeholder="Paste your policy document content here..."></textarea></div>
+                        <div id="pol-file-area" style="display:none;"><input type="file" id="polUploadFile" accept=".txt,.md,.csv,.json,.xml,.html,.htm,.rtf,.pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.ppt,.pptx,.pptm,.one,.onetoc2,.vsd,.vsdx,.msg,.eml,.pub,.accdb,.mpp,.ods,.odt,.odp" class="form-input" /><textarea id="polFilePreview" rows="8" class="form-input mono" placeholder="File content preview..." readonly style="margin-top:8px;"></textarea></div>
                     </div>
-                </div>
-            </div>
-
-            <div class="quick-actions" id="quickActions">
-                <button class="btn btn-small" data-action="Generate an access control policy for NIST CSF">Generate Policy</button>
-                <button class="btn btn-small" data-action="Analyze our current policies against HIPAA">Analyze Policy</button>
-                <button class="btn btn-small" data-action="Create a System Security Plan">Create SSP</button>
-                <button class="btn btn-small" data-action="Show available frameworks">Frameworks</button>
-            </div>
-
-            <div class="chat-input-container">
-                <input type="text" id="messageInput" class="chat-input" placeholder="Type your message..." />
-                <button class="btn btn-primary" id="sendBtn">Send</button>
-            </div>
-        </section>
-
-        <!-- Policies Page -->
-        <section id="policies-page" class="page">
-            <header class="page-header">
-                <h2>Policy Management</h2>
-                <p>Create and manage compliance policies</p>
-            </header>
-
-            <div class="form-container">
-                <h3>Generate New Policy</h3>
-                <form id="policyForm">
-                    <div class="form-group">
-                        <label for="policyTitle">Policy Title</label>
-                        <input type="text" id="policyTitle" placeholder="e.g., Access Control Policy" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="organization">Organization Name</label>
-                        <input type="text" id="organization" placeholder="Enter organization name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="policyFrameworks">Compliance Frameworks</label>
-                        <select id="policyFrameworks" multiple size="5">
-                            <option value="nist-csf" selected>NIST CSF 2.0</option>
-                            <option value="nist-800-53">NIST 800-53</option>
-                            <option value="hipaa">HIPAA</option>
-                            <option value="gdpr">GDPR</option>
-                            <option value="soc2">SOC 2</option>
-                            <option value="cmmc">CMMC 2.0</option>
-                            <option value="cjis">CJIS</option>
-                            <option value="pci-dss">PCI DSS</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Generate Policy</button>
-                </form>
-            </div>
-
-            <div class="list-container">
-                <h3>Generated Policies</h3>
-                <div id="policiesList" class="list">
-                    <p class="empty-state">No policies yet. Generate one above!</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Plans Page -->
-        <section id="plans-page" class="page">
-            <header class="page-header">
-                <h2>Security Plans</h2>
-                <p>Create comprehensive security and compliance plans</p>
-            </header>
-
-            <div class="form-container">
-                <h3>Generate New Plan</h3>
-                <form id="planForm">
-                    <div class="form-group">
-                        <label for="planType">Plan Type</label>
-                        <select id="planType" required>
-                            <option value="">Select a plan type</option>
-                            <option value="ssp">System Security Plan (SSP)</option>
-                            <option value="irp">Incident Response Plan (IRP)</option>
-                            <option value="brp">Breach Response Plan (BRP)</option>
-                            <option value="bcdr">Business Continuity & Disaster Recovery</option>
-                            <option value="test-failover">Test & Failover Plan</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="planTitle">Plan Title</label>
-                        <input type="text" id="planTitle" placeholder="Enter plan title" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="planOrganization">Organization Name</label>
-                        <input type="text" id="planOrganization" placeholder="Enter organization name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="planFrameworks">Compliance Frameworks</label>
-                        <select id="planFrameworks" multiple size="5">
-                            <option value="nist-csf" selected>NIST CSF 2.0</option>
-                            <option value="nist-800-53">NIST 800-53</option>
-                            <option value="hipaa">HIPAA</option>
-                            <option value="cmmc">CMMC 2.0</option>
-                            <option value="cjis">CJIS</option>
-                            <option value="pci-dss">PCI DSS</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Generate Plan</button>
-                </form>
-            </div>
-
-            <div class="list-container">
-                <h3>Generated Plans</h3>
-                <div id="plansList" class="list">
-                    <p class="empty-state">No plans yet. Generate one above!</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Frameworks Page -->
-        <section id="frameworks-page" class="page">
-            <header class="page-header">
-                <h2>Compliance Frameworks</h2>
-                <p>Browse and compare compliance standards and requirements</p>
-            </header>
-
-            <div class="search-container">
-                <input type="text" id="frameworkSearch" class="search-input" placeholder="Search frameworks..." />
-            </div>
-
-            <div id="frameworksList" class="frameworks-grid">
-                <!-- Populated by JavaScript -->
-            </div>
-
-            <!-- Framework Detail Modal -->
-            <div id="frameworkModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <span class="modal-close" id="frameworkModalClose">&times;</span>
-                    <div id="frameworkDetail">
-                        <!-- Populated by JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Controls Page -->
-        <section id="controls-page" class="page">
-            <header class="page-header">
-                <h2>Control Implementations</h2>
-                <p>Document and track your organizational controls and procedures</p>
-            </header>
-
-            <div class="controls-filters">
-                <div class="form-group">
-                    <label for="controlFrameworkFilter">Framework</label>
-                    <select id="controlFrameworkFilter">
-                        <option value="">All Frameworks</option>
-                        <option value="nist-csf">NIST CSF 2.0</option>
-                        <option value="nist-800-53">NIST 800-53</option>
-                        <option value="hipaa">HIPAA</option>
-                        <option value="soc2">SOC 2</option>
-                        <option value="cmmc">CMMC 2.0</option>
-                        <option value="cjis">CJIS</option>
-                        <option value="pci-dss">PCI DSS</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="controlStatusFilter">Status</label>
-                    <select id="controlStatusFilter">
-                        <option value="">All Statuses</option>
-                        <option value="not-implemented">Not Implemented</option>
-                        <option value="planned">Planned</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="implemented">Implemented</option>
-                        <option value="partially-implemented">Partially Implemented</option>
-                        <option value="not-applicable">Not Applicable</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" id="addControlBtn">+ Add Control</button>
-            </div>
-
-            <div class="controls-summary" id="controlsSummary">
-                <div class="stat-card">
-                    <div class="stat-value" id="totalControls">0</div>
-                    <div class="stat-label">Total Controls</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="implementedControls">0</div>
-                    <div class="stat-label">Implemented</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="inProgressControls">0</div>
-                    <div class="stat-label">In Progress</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="notImplementedControls">0</div>
-                    <div class="stat-label">Not Implemented</div>
-                </div>
-            </div>
-
-            <div class="list-container">
-                <h3>Implemented Controls</h3>
-                <div id="controlsList" class="list">
-                    <p class="empty-state">No controls documented yet. Add one above!</p>
-                </div>
-            </div>
-
-            <!-- Add/Edit Control Modal -->
-            <div id="controlModal" class="modal" style="display: none;">
-                <div class="modal-content modal-large">
-                    <span class="modal-close" id="controlModalClose">&times;</span>
-                    <h2 id="controlModalTitle">Add New Control</h2>
-                    <form id="controlForm">
-                        <input type="hidden" id="controlId" />
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="controlFramework">Framework*</label>
-                                <select id="controlFramework" required>
-                                    <option value="">Select Framework</option>
-                                    <option value="nist-csf">NIST CSF 2.0</option>
-                                    <option value="nist-800-53">NIST 800-53</option>
-                                    <option value="hipaa">HIPAA</option>
-                                    <option value="soc2">SOC 2</option>
-                                    <option value="cmmc">CMMC 2.0</option>
-                                    <option value="cjis">CJIS</option>
-                                    <option value="pci-dss">PCI DSS</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="frameworkControlId">Framework Control ID*</label>
-                                <input type="text" id="frameworkControlId" placeholder="e.g., AC-1, CJIS-5.1" required />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="controlName">Control Name*</label>
-                            <input type="text" id="controlName" placeholder="e.g., Access Control Policy" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="controlDescription">Description</label>
-                            <textarea id="controlDescription" rows="3" placeholder="Describe how this control is implemented..."></textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="controlOrganization">Organization*</label>
-                                <input type="text" id="controlOrganization" placeholder="Organization name" required />
-                            </div>
-                            <div class="form-group">
-                                <label for="controlOwner">Control Owner</label>
-                                <input type="text" id="controlOwner" placeholder="Responsible person/team" />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="controlType">Control Type</label>
-                                <select id="controlType">
-                                    <option value="technical">Technical</option>
-                                    <option value="administrative">Administrative</option>
-                                    <option value="physical">Physical</option>
-                                    <option value="hybrid">Hybrid</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="controlStatus">Status*</label>
-                                <select id="controlStatus" required>
-                                    <option value="not-implemented">Not Implemented</option>
-                                    <option value="planned">Planned</option>
-                                    <option value="in-progress">In Progress</option>
-                                    <option value="implemented">Implemented</option>
-                                    <option value="partially-implemented">Partially Implemented</option>
-                                    <option value="not-applicable">Not Applicable</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="controlEffectiveness">Effectiveness</label>
-                                <select id="controlEffectiveness">
-                                    <option value="not-tested">Not Tested</option>
-                                    <option value="ineffective">Ineffective</option>
-                                    <option value="partially-effective">Partially Effective</option>
-                                    <option value="effective">Effective</option>
-                                    <option value="highly-effective">Highly Effective</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="controlLastReviewed">Last Reviewed</label>
-                                <input type="date" id="controlLastReviewed" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="controlEvidence">Evidence Links (one per line)</label>
-                            <textarea id="controlEvidence" rows="2" placeholder="URL or document references..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="controlNotes">Notes</label>
-                            <textarea id="controlNotes" rows="2" placeholder="Additional notes..."></textarea>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" id="cancelControlBtn">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Control</button>
-                        </div>
+                    <button class="btn btn-primary" id="polUploadBtn">📤 Upload & Assess Policy</button>
+                    <div id="polUploadResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="pol-gap" class="tab-panel"><div class="panel-body">
+                    <h3>Policy Gap Assessment</h3><p class="hint">Select an uploaded policy and run gap analysis against a target framework.</p>
+                    <div class="form-group"><label for="polGapDoc">Select Policy Document</label><select id="polGapDoc" class="form-input"><option value="">-- Upload a policy first --</option></select></div>
+                    <div class="form-group"><label for="polGapFramework">Target Framework</label><select id="polGapFramework" class="form-input"><option value="nist-csf">NIST CSF 2.0</option><option value="nist-800-53">NIST SP 800-53</option><option value="cmmc">CMMC 2.0</option><option value="hipaa">HIPAA</option><option value="soc2">SOC 2</option><option value="pci-dss">PCI DSS 4.0</option><option value="cjis">CJIS</option><option value="fedramp">FedRAMP</option></select></div>
+                    <button class="btn btn-primary" id="polGapBtn">🔍 Run Gap Assessment</button>
+                    <div id="polGapResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="pol-cap" class="tab-panel"><div class="panel-body">
+                    <h3>Corrective Action Plan (CAP) & POA&M</h3><p class="hint">Generate remediation plans from identified policy gaps.</p>
+                    <div class="form-group"><label for="polCapType">Output Type</label><select id="polCapType" class="form-input"><option value="cap">Corrective Action Plan (CAP)</option><option value="poam">Plan of Action & Milestones (POA&M)</option><option value="both">Both</option></select></div>
+                    <div class="form-group"><label for="polCapFramework">Framework</label><select id="polCapFramework" class="form-input"><option value="nist-800-53">NIST SP 800-53</option><option value="nist-csf">NIST CSF 2.0</option><option value="cmmc">CMMC 2.0</option><option value="hipaa">HIPAA</option><option value="pci-dss">PCI DSS 4.0</option><option value="soc2">SOC 2</option><option value="fedramp">FedRAMP</option></select></div>
+                    <div class="form-group"><label for="polCapGaps">Identified Gaps (one per line)</label><textarea id="polCapGaps" rows="8" class="form-input mono" placeholder="AC-2 — Account Management not documented&#10;AC-3 — Access Enforcement lacks RBAC&#10;&#10;Run Gap Assessment first to auto-populate."></textarea></div>
+                    <div class="form-group"><label for="polCapTimeline">Remediation Timeline</label><select id="polCapTimeline" class="form-input"><option value="30">30 days</option><option value="60">60 days</option><option value="90" selected>90 days</option><option value="180">180 days</option><option value="365">1 year</option></select></div>
+                    <button class="btn btn-primary" id="polCapBtn">📋 Generate CAP / POA&M</button>
+                    <div id="polCapResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="pol-generate" class="tab-panel"><div class="panel-body">
+                    <h3>Generate New Policy</h3>
+                    <form id="policyForm">
+                        <div class="form-group"><label for="policyTitle">Policy Title</label><input type="text" id="policyTitle" placeholder="e.g., Access Control Policy" class="form-input" required></div>
+                        <div class="form-group"><label for="organization">Organization Name</label><input type="text" id="organization" placeholder="Enter organization name" class="form-input" required></div>
+                        <div class="form-group"><label for="policyFrameworks">Frameworks</label><select id="policyFrameworks" multiple size="6" class="form-input"><option value="nist-csf" selected>NIST CSF 2.0</option><option value="nist-800-53">NIST SP 800-53</option><option value="hipaa">HIPAA</option><option value="soc2">SOC 2</option><option value="cmmc">CMMC 2.0</option><option value="cjis">CJIS</option><option value="pci-dss">PCI DSS</option><option value="gdpr">GDPR</option><option value="fedramp">FedRAMP</option></select></div>
+                        <button type="submit" class="btn btn-primary">Generate Policy</button>
                     </form>
-                </div>
-            </div>
+                </div></div>
+                <div id="pol-library" class="tab-panel"><div class="panel-body">
+                    <div style="display:flex;gap:12px;margin-bottom:16px;"><input type="text" id="polLibFilter" placeholder="Search policies..." class="form-input" style="flex:1;" /><button class="btn btn-primary" id="polRefreshBtn">🔄 Refresh</button></div>
+                    <div id="policiesList" class="list"><p class="empty-state">No policies yet. Upload or generate one.</p></div>
+                </div></div>
+            </section>
 
-            <!-- Control Detail Modal -->
-            <div id="controlDetailModal" class="modal" style="display: none;">
-                <div class="modal-content modal-large">
-                    <span class="modal-close" id="controlDetailModalClose">&times;</span>
-                    <div id="controlDetail">
-                        <!-- Populated by JavaScript -->
+            <!-- Plans Page -->
+            <section id="plans-page" class="page">
+                <header class="page-header"><h2>Security & Compliance Plans</h2><p>Upload, assess, and generate plans (SSP, IRP, BRP, BC/DR)</p></header>
+                <div class="module-tabs">
+                    <button class="tab-btn active" data-tab="plan-upload">Upload & Assess</button>
+                    <button class="tab-btn" data-tab="plan-gap">Gap Analysis</button>
+                    <button class="tab-btn" data-tab="plan-cap">CAP & POA&M</button>
+                    <button class="tab-btn" data-tab="plan-generate">Generate</button>
+                    <button class="tab-btn" data-tab="plan-library">Library</button>
+                </div>
+                <div id="plan-upload" class="tab-panel active"><div class="panel-body">
+                    <h3>Upload Plan Document for Assessment</h3><p class="hint">Upload existing security/compliance plans to assess completeness.</p>
+                    <div class="form-group"><label for="planUploadTitle">Document Title</label><input type="text" id="planUploadTitle" placeholder="e.g., System Security Plan 2025" class="form-input" /></div>
+                    <div class="form-group"><label for="planUploadType">Plan Type</label><select id="planUploadType" class="form-input"><option value="">Auto-detect</option><option value="ssp">SSP</option><option value="irp">IRP</option><option value="brp">BRP</option><option value="bcdr">BC/DR</option></select></div>
+                    <div class="form-group"><label for="planUploadFramework">Assess Against Framework</label><select id="planUploadFramework" class="form-input"><option value="nist-800-53">NIST SP 800-53</option><option value="nist-csf">NIST CSF 2.0</option><option value="cmmc">CMMC 2.0</option><option value="hipaa">HIPAA</option><option value="fedramp">FedRAMP</option><option value="soc2">SOC 2</option><option value="cjis">CJIS</option></select></div>
+                    <div class="form-group"><label>Plan Content</label>
+                        <div class="upload-toggle"><button class="toggle-btn active" data-mode="paste" data-target="plan">Paste Text</button><button class="toggle-btn" data-mode="file" data-target="plan">Upload File</button></div>
+                        <div id="plan-paste-area"><textarea id="planUploadContent" rows="12" class="form-input mono" placeholder="Paste your plan document here..."></textarea></div>
+                        <div id="plan-file-area" style="display:none;"><input type="file" id="planUploadFile" accept=".txt,.md,.csv,.json,.xml,.html,.htm,.rtf,.pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.ppt,.pptx,.pptm,.one,.onetoc2,.vsd,.vsdx,.msg,.eml,.pub,.accdb,.mpp,.ods,.odt,.odp" class="form-input" /><textarea id="planFilePreview" rows="8" class="form-input mono" placeholder="File content preview..." readonly style="margin-top:8px;"></textarea></div>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Procedures Page -->
-        <section id="procedures-page" class="page">
-            <header class="page-header">
-                <h2>Procedures Management</h2>
-                <p>Document and manage operational procedures for your controls</p>
-            </header>
-
-            <div class="procedures-filters">
-                <div class="form-group">
-                    <label for="procedureControlFilter">Control</label>
-                    <select id="procedureControlFilter">
-                        <option value="">All Controls</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="procedureFrequencyFilter">Frequency</label>
-                    <select id="procedureFrequencyFilter">
-                        <option value="">All Frequencies</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="quarterly">Quarterly</option>
-                        <option value="annually">Annually</option>
-                        <option value="as-needed">As Needed</option>
-                        <option value="continuous">Continuous</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" id="addProcedureBtn">+ Add Procedure</button>
-            </div>
-
-            <div class="procedures-summary" id="proceduresSummary">
-                <div class="stat-card">
-                    <div class="stat-value" id="totalProcedures">0</div>
-                    <div class="stat-label">Total Procedures</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="activeProcedures">0</div>
-                    <div class="stat-label">Active</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="dueProcedures">0</div>
-                    <div class="stat-label">Due Soon</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="overdueProcedures">0</div>
-                    <div class="stat-label">Overdue</div>
-                </div>
-            </div>
-
-            <div class="list-container">
-                <h3>Documented Procedures</h3>
-                <div id="proceduresList" class="list">
-                    <p class="empty-state">No procedures documented yet. Add one above!</p>
-                </div>
-            </div>
-
-            <!-- Add/Edit Procedure Modal -->
-            <div id="procedureModal" class="modal" style="display: none;">
-                <div class="modal-content modal-large">
-                    <span class="modal-close" id="procedureModalClose">&times;</span>
-                    <h2 id="procedureModalTitle">Add New Procedure</h2>
-                    <form id="procedureForm">
-                        <input type="hidden" id="procedureId" />
-                        <div class="form-group">
-                            <label for="procedureControlId">Associated Control*</label>
-                            <select id="procedureControlId" required>
-                                <option value="">Select a Control</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="procedureName">Procedure Name*</label>
-                            <input type="text" id="procedureName" placeholder="e.g., Weekly Access Review" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="procedureDescription">Description</label>
-                            <textarea id="procedureDescription" rows="3" placeholder="Describe the procedure..."></textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="procedureFrequency">Frequency*</label>
-                                <select id="procedureFrequency" required>
-                                    <option value="daily">Daily</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                    <option value="quarterly">Quarterly</option>
-                                    <option value="annually">Annually</option>
-                                    <option value="as-needed">As Needed</option>
-                                    <option value="continuous">Continuous</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="procedureLastExecuted">Last Executed</label>
-                                <input type="date" id="procedureLastExecuted" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="procedureOwner">Responsible Person/Team</label>
-                            <input type="text" id="procedureOwner" placeholder="Who is responsible for executing this procedure" />
-                        </div>
-                        
-                        <div class="procedure-steps-section">
-                            <h3>Procedure Steps</h3>
-                            <div id="procedureStepsList">
-                                <!-- Steps dynamically added here -->
-                            </div>
-                            <button type="button" class="btn btn-secondary" id="addProcedureStepBtn">+ Add Step</button>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" id="cancelProcedureBtn">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Procedure</button>
-                        </div>
+                    <button class="btn btn-primary" id="planUploadBtn">📤 Upload & Assess Plan</button>
+                    <div id="planUploadResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="plan-gap" class="tab-panel"><div class="panel-body">
+                    <h3>Plan Gap Assessment</h3><p class="hint">Select an uploaded plan and run gap analysis.</p>
+                    <div class="form-group"><label for="planGapDoc">Select Plan</label><select id="planGapDoc" class="form-input"><option value="">-- Upload a plan first --</option></select></div>
+                    <div class="form-group"><label for="planGapFramework">Target Framework</label><select id="planGapFramework" class="form-input"><option value="nist-800-53">NIST SP 800-53</option><option value="nist-csf">NIST CSF 2.0</option><option value="cmmc">CMMC 2.0</option><option value="hipaa">HIPAA</option><option value="fedramp">FedRAMP</option><option value="soc2">SOC 2</option></select></div>
+                    <button class="btn btn-primary" id="planGapBtn">🔍 Run Gap Assessment</button>
+                    <div id="planGapResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="plan-cap" class="tab-panel"><div class="panel-body">
+                    <h3>Plan CAP & POA&M</h3><p class="hint">Generate remediation plans from identified plan gaps.</p>
+                    <div class="form-group"><label for="planCapType">Output Type</label><select id="planCapType" class="form-input"><option value="cap">CAP</option><option value="poam">POA&M</option><option value="both">Both</option></select></div>
+                    <div class="form-group"><label for="planCapGaps">Identified Gaps</label><textarea id="planCapGaps" rows="8" class="form-input mono" placeholder="Gaps auto-populate from Gap Assessment..."></textarea></div>
+                    <div class="form-group"><label for="planCapTimeline">Timeline</label><select id="planCapTimeline" class="form-input"><option value="30">30 days</option><option value="60">60 days</option><option value="90" selected>90 days</option><option value="180">180 days</option></select></div>
+                    <button class="btn btn-primary" id="planCapBtn">📋 Generate CAP / POA&M</button>
+                    <div id="planCapResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="plan-generate" class="tab-panel"><div class="panel-body">
+                    <h3>Generate New Plan</h3>
+                    <form id="planForm">
+                        <div class="form-group"><label for="planType">Plan Type</label><select id="planType" class="form-input" required><option value="">Select type</option><option value="ssp">System Security Plan (SSP)</option><option value="irp">Incident Response Plan</option><option value="brp">Breach Response Plan</option><option value="bcdr">BC/DR Plan</option><option value="poam">POA&M</option><option value="cap">CAP</option></select></div>
+                        <div class="form-group"><label for="planTitle">Plan Title</label><input type="text" id="planTitle" placeholder="Enter plan title" class="form-input" required></div>
+                        <div class="form-group"><label for="planOrganization">Organization</label><input type="text" id="planOrganization" placeholder="Organization name" class="form-input" required></div>
+                        <div class="form-group"><label for="planFrameworks">Frameworks</label><select id="planFrameworks" multiple size="5" class="form-input"><option value="nist-csf" selected>NIST CSF 2.0</option><option value="nist-800-53">NIST SP 800-53</option><option value="hipaa">HIPAA</option><option value="cmmc">CMMC 2.0</option><option value="cjis">CJIS</option><option value="fedramp">FedRAMP</option></select></div>
+                        <button type="submit" class="btn btn-primary">Generate Plan</button>
                     </form>
-                </div>
-            </div>
+                </div></div>
+                <div id="plan-library" class="tab-panel"><div class="panel-body">
+                    <div style="display:flex;gap:12px;margin-bottom:16px;"><input type="text" id="planLibFilter" placeholder="Search plans..." class="form-input" style="flex:1;" /><button class="btn btn-primary" id="planRefreshBtn">🔄 Refresh</button></div>
+                    <div id="plansList" class="list"><p class="empty-state">No plans yet. Upload or generate one.</p></div>
+                </div></div>
+            </section>
 
-            <!-- Procedure Detail Modal -->
-            <div id="procedureDetailModal" class="modal" style="display: none;">
-                <div class="modal-content modal-large">
-                    <span class="modal-close" id="procedureDetailModalClose">&times;</span>
-                    <div id="procedureDetail">
-                        <!-- Populated by JavaScript -->
+            <!-- Frameworks Page -->
+            <section id="frameworks-page" class="page">
+                <header class="page-header"><h2>Compliance Frameworks</h2><p>Browse and compare compliance standards</p></header>
+                <div class="search-container"><input type="text" id="frameworkSearch" class="search-input" placeholder="Search frameworks..." /></div>
+                <div id="frameworksList" class="frameworks-grid"></div>
+                <div id="frameworkModal" class="modal" style="display:none;"><div class="modal-content"><span class="modal-close" id="frameworkModalClose">&times;</span><div id="frameworkDetail"></div></div></div>
+            </section>
+
+            <!-- Controls Page -->
+            <section id="controls-page" class="page">
+                <header class="page-header"><h2>Control Implementations</h2><p>Document, upload evidence, and track controls</p></header>
+                <div class="module-tabs">
+                    <button class="tab-btn active" data-tab="ctrl-manage">Manage</button>
+                    <button class="tab-btn" data-tab="ctrl-upload">Upload Evidence</button>
+                    <button class="tab-btn" data-tab="ctrl-gap">Gap Analysis</button>
+                    <button class="tab-btn" data-tab="ctrl-cap">CAP & POA&M</button>
+                </div>
+                <div id="ctrl-manage" class="tab-panel active"><div class="panel-body">
+                    <div class="controls-filters">
+                        <div class="form-group"><label for="controlFrameworkFilter">Framework</label><select id="controlFrameworkFilter" class="form-input"><option value="">All</option><option value="nist-csf">NIST CSF</option><option value="nist-800-53">NIST 800-53</option><option value="hipaa">HIPAA</option><option value="soc2">SOC 2</option><option value="cmmc">CMMC</option><option value="cjis">CJIS</option><option value="pci-dss">PCI DSS</option></select></div>
+                        <div class="form-group"><label for="controlStatusFilter">Status</label><select id="controlStatusFilter" class="form-input"><option value="">All</option><option value="not-implemented">Not Implemented</option><option value="planned">Planned</option><option value="in-progress">In Progress</option><option value="implemented">Implemented</option></select></div>
+                        <button class="btn btn-primary" id="addControlBtn">+ Add Control</button>
                     </div>
-                </div>
-            </div>
-        </section>
+                    <div class="controls-summary"><div class="stat-card"><div class="stat-value" id="totalControls">0</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-value" id="implementedControls">0</div><div class="stat-label">Implemented</div></div><div class="stat-card"><div class="stat-value" id="inProgressControls">0</div><div class="stat-label">In Progress</div></div><div class="stat-card"><div class="stat-value" id="notImplementedControls">0</div><div class="stat-label">Not Implemented</div></div></div>
+                    <div id="controlsList" class="list"><p class="empty-state">No controls yet. Add one above!</p></div>
+                    <div class="recent-docs-section">
+                        <h4 style="margin-top:16px;">📎 Related Documents</h4>
+                        <p class="hint">Documents and evidence uploaded across all modules that reference controls.</p>
+                        <div id="ctrlRecentDocs" class="recent-docs-list"><p class="empty-state">No documents uploaded yet.</p></div>
+                    </div>
+                </div></div>
+                <div id="ctrl-upload" class="tab-panel"><div class="panel-body">
+                    <h3>Upload Control Evidence</h3><p class="hint">Upload evidence documents, screenshots, or artifacts demonstrating control implementation.</p>
+                    <div class="form-group"><label for="ctrlEvidenceTitle">Title</label><input type="text" id="ctrlEvidenceTitle" placeholder="e.g., Access Review Q1 2025" class="form-input" /></div>
+                    <div class="form-group"><label for="ctrlEvidenceControl">Control</label><select id="ctrlEvidenceControl" class="form-input"><option value="">Select control...</option></select></div>
+                    <div class="form-group"><label>Evidence</label>
+                        <div class="upload-toggle"><button class="toggle-btn active" data-mode="paste" data-target="ctrl">Paste</button><button class="toggle-btn" data-mode="file" data-target="ctrl">File</button></div>
+                        <div id="ctrl-paste-area"><textarea id="ctrlEvidenceContent" rows="10" class="form-input mono" placeholder="Paste evidence content..."></textarea></div>
+                        <div id="ctrl-file-area" style="display:none;"><input type="file" id="ctrlEvidenceFile" accept=".txt,.md,.csv,.json,.xml,.html,.htm,.rtf,.pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.ppt,.pptx,.pptm,.one,.onetoc2,.vsd,.vsdx,.msg,.eml,.pub,.accdb,.mpp,.ods,.odt,.odp,.png,.jpg,.jpeg,.gif,.bmp,.tiff,.svg" class="form-input" /><textarea id="ctrlFilePreview" rows="6" class="form-input mono" placeholder="Preview..." readonly style="margin-top:8px;"></textarea></div>
+                    </div>
+                    <button class="btn btn-primary" id="ctrlUploadBtn">📤 Upload Evidence</button>
+                    <div id="ctrlUploadResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="ctrl-gap" class="tab-panel"><div class="panel-body">
+                    <h3>Controls Gap Analysis</h3><p class="hint">Analyze current controls against framework requirements.</p>
+                    <div class="form-group"><label for="ctrlGapFramework">Framework</label><select id="ctrlGapFramework" class="form-input"><option value="nist-800-53">NIST SP 800-53</option><option value="nist-csf">NIST CSF 2.0</option><option value="cmmc">CMMC 2.0</option><option value="hipaa">HIPAA</option><option value="soc2">SOC 2</option><option value="pci-dss">PCI DSS</option><option value="cjis">CJIS</option></select></div>
+                    <button class="btn btn-primary" id="ctrlGapBtn">🔍 Run Gap Analysis</button>
+                    <div id="ctrlGapResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="ctrl-cap" class="tab-panel"><div class="panel-body">
+                    <h3>Controls CAP & POA&M</h3>
+                    <div class="form-group"><label for="ctrlCapType">Type</label><select id="ctrlCapType" class="form-input"><option value="cap">CAP</option><option value="poam">POA&M</option><option value="both">Both</option></select></div>
+                    <div class="form-group"><label for="ctrlCapGaps">Gaps</label><textarea id="ctrlCapGaps" rows="8" class="form-input mono" placeholder="Auto-populated from Gap Analysis..."></textarea></div>
+                    <div class="form-group"><label for="ctrlCapTimeline">Timeline</label><select id="ctrlCapTimeline" class="form-input"><option value="30">30 days</option><option value="60">60 days</option><option value="90" selected>90 days</option><option value="180">180 days</option></select></div>
+                    <button class="btn btn-primary" id="ctrlCapBtn">📋 Generate CAP / POA&M</button>
+                    <div id="ctrlCapResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <!-- Control Modals -->
+                <div id="controlModal" class="modal" style="display:none;"><div class="modal-content modal-large"><span class="modal-close" id="controlModalClose">&times;</span><h2 id="controlModalTitle">Add New Control</h2><form id="controlForm"><input type="hidden" id="controlId" /><div class="form-row"><div class="form-group"><label for="controlFramework">Framework*</label><select id="controlFramework" class="form-input" required><option value="">Select</option><option value="nist-csf">NIST CSF</option><option value="nist-800-53">NIST 800-53</option><option value="hipaa">HIPAA</option><option value="soc2">SOC 2</option><option value="cmmc">CMMC</option><option value="cjis">CJIS</option><option value="pci-dss">PCI DSS</option></select></div><div class="form-group"><label for="frameworkControlId">Control ID*</label><input type="text" id="frameworkControlId" placeholder="e.g., AC-1" class="form-input" required /></div></div><div class="form-group"><label for="controlName">Name*</label><input type="text" id="controlName" placeholder="Control name" class="form-input" required /></div><div class="form-group"><label for="controlDescription">Description</label><textarea id="controlDescription" rows="3" class="form-input"></textarea></div><div class="form-row"><div class="form-group"><label for="controlOrganization">Organization*</label><input type="text" id="controlOrganization" class="form-input" required /></div><div class="form-group"><label for="controlOwner">Owner</label><input type="text" id="controlOwner" class="form-input" /></div></div><div class="form-row"><div class="form-group"><label for="controlType">Type</label><select id="controlType" class="form-input"><option value="technical">Technical</option><option value="administrative">Administrative</option><option value="physical">Physical</option></select></div><div class="form-group"><label for="controlStatus">Status*</label><select id="controlStatus" class="form-input" required><option value="not-implemented">Not Implemented</option><option value="planned">Planned</option><option value="in-progress">In Progress</option><option value="implemented">Implemented</option></select></div></div><div class="form-row"><div class="form-group"><label for="controlEffectiveness">Effectiveness</label><select id="controlEffectiveness" class="form-input"><option value="not-tested">Not Tested</option><option value="ineffective">Ineffective</option><option value="partially-effective">Partial</option><option value="effective">Effective</option></select></div><div class="form-group"><label for="controlLastReviewed">Last Reviewed</label><input type="date" id="controlLastReviewed" class="form-input" /></div></div><div class="form-group"><label for="controlEvidence">Evidence Links</label><textarea id="controlEvidence" rows="2" class="form-input"></textarea></div><div class="form-actions"><button type="button" class="btn btn-secondary" id="cancelControlBtn">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></form></div></div>
+                <div id="controlDetailModal" class="modal" style="display:none;"><div class="modal-content modal-large"><span class="modal-close" id="controlDetailModalClose">&times;</span><div id="controlDetail"></div></div></div>
+            </section>
 
-        <!-- Analytics Page -->
-        <section id="analytics-page" class="page">
-            <header class="page-header">
-                <h2>Analytics & Activity</h2>
-                <p>View your GRC Agent usage and activity</p>
-            </header>
+            <!-- Procedures Page -->
+            <section id="procedures-page" class="page">
+                <header class="page-header"><h2>Procedures Management</h2><p>Upload, document, and manage operational procedures</p></header>
+                <div class="module-tabs">
+                    <button class="tab-btn active" data-tab="proc-manage">Manage</button>
+                    <button class="tab-btn" data-tab="proc-upload">Upload & Assess</button>
+                    <button class="tab-btn" data-tab="proc-gap">Gap Analysis</button>
+                    <button class="tab-btn" data-tab="proc-cap">CAP & POA&M</button>
+                </div>
+                <div id="proc-manage" class="tab-panel active"><div class="panel-body">
+                    <div class="procedures-filters">
+                        <div class="form-group"><label for="procedureControlFilter">Control</label><select id="procedureControlFilter" class="form-input"><option value="">All</option></select></div>
+                        <div class="form-group"><label for="procedureFrequencyFilter">Frequency</label><select id="procedureFrequencyFilter" class="form-input"><option value="">All</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annually">Annually</option></select></div>
+                        <button class="btn btn-primary" id="addProcedureBtn">+ Add Procedure</button>
+                    </div>
+                    <div class="procedures-summary"><div class="stat-card"><div class="stat-value" id="totalProcedures">0</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-value" id="activeProcedures">0</div><div class="stat-label">Active</div></div><div class="stat-card"><div class="stat-value" id="dueProcedures">0</div><div class="stat-label">Due Soon</div></div><div class="stat-card"><div class="stat-value" id="overdueProcedures">0</div><div class="stat-label">Overdue</div></div></div>
+                    <div id="proceduresList" class="list"><p class="empty-state">No procedures yet.</p></div>
+                    <div class="recent-docs-section">
+                        <h4 style="margin-top:16px;">📎 Related Documents</h4>
+                        <p class="hint">Documents and evidence uploaded across all modules that reference procedures.</p>
+                        <div id="procRecentDocs" class="recent-docs-list"><p class="empty-state">No documents uploaded yet.</p></div>
+                    </div>
+                </div></div>
+                <div id="proc-upload" class="tab-panel"><div class="panel-body">
+                    <h3>Upload Procedure Documentation</h3><p class="hint">Upload SOPs, runbooks, checklists for assessment.</p>
+                    <div class="form-group"><label for="procUploadTitle">Title</label><input type="text" id="procUploadTitle" placeholder="e.g., Access Review SOP" class="form-input" /></div>
+                    <div class="form-group"><label for="procUploadFramework">Assess Against</label><select id="procUploadFramework" class="form-input"><option value="nist-800-53">NIST SP 800-53</option><option value="nist-csf">NIST CSF 2.0</option><option value="hipaa">HIPAA</option><option value="soc2">SOC 2</option><option value="pci-dss">PCI DSS</option><option value="cjis">CJIS</option></select></div>
+                    <div class="form-group"><label>Content</label>
+                        <div class="upload-toggle"><button class="toggle-btn active" data-mode="paste" data-target="proc">Paste</button><button class="toggle-btn" data-mode="file" data-target="proc">File</button></div>
+                        <div id="proc-paste-area"><textarea id="procUploadContent" rows="12" class="form-input mono" placeholder="Paste procedure content..."></textarea></div>
+                        <div id="proc-file-area" style="display:none;"><input type="file" id="procUploadFile" accept=".txt,.md,.csv,.json,.xml,.html,.htm,.rtf,.pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.ppt,.pptx,.pptm,.one,.onetoc2,.vsd,.vsdx,.msg,.eml,.pub,.accdb,.mpp,.ods,.odt,.odp" class="form-input" /><textarea id="procFilePreview" rows="6" class="form-input mono" placeholder="Preview..." readonly style="margin-top:8px;"></textarea></div>
+                    </div>
+                    <button class="btn btn-primary" id="procUploadBtn">📤 Upload & Assess</button>
+                    <div id="procUploadResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="proc-gap" class="tab-panel"><div class="panel-body">
+                    <h3>Procedures Gap Analysis</h3><p class="hint">Identify missing procedures against framework requirements.</p>
+                    <div class="form-group"><label for="procGapFramework">Framework</label><select id="procGapFramework" class="form-input"><option value="nist-800-53">NIST SP 800-53</option><option value="nist-csf">NIST CSF 2.0</option><option value="hipaa">HIPAA</option><option value="soc2">SOC 2</option><option value="pci-dss">PCI DSS</option></select></div>
+                    <button class="btn btn-primary" id="procGapBtn">🔍 Run Gap Analysis</button>
+                    <div id="procGapResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="proc-cap" class="tab-panel"><div class="panel-body">
+                    <h3>Procedures CAP & POA&M</h3>
+                    <div class="form-group"><label for="procCapGaps">Gaps</label><textarea id="procCapGaps" rows="8" class="form-input mono" placeholder="Auto-populated from Gap Analysis..."></textarea></div>
+                    <div class="form-group"><label for="procCapTimeline">Timeline</label><select id="procCapTimeline" class="form-input"><option value="30">30 days</option><option value="60">60 days</option><option value="90" selected>90 days</option><option value="180">180 days</option></select></div>
+                    <button class="btn btn-primary" id="procCapBtn">📋 Generate CAP / POA&M</button>
+                    <div id="procCapResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <!-- Procedure Modals -->
+                <div id="procedureModal" class="modal" style="display:none;"><div class="modal-content modal-large"><span class="modal-close" id="procedureModalClose">&times;</span><h2 id="procedureModalTitle">Add Procedure</h2><form id="procedureForm"><input type="hidden" id="procedureId" /><div class="form-group"><label for="procedureControlId">Control*</label><select id="procedureControlId" class="form-input" required><option value="">Select</option></select></div><div class="form-group"><label for="procedureName">Name*</label><input type="text" id="procedureName" class="form-input" required /></div><div class="form-group"><label for="procedureDescription">Description</label><textarea id="procedureDescription" rows="3" class="form-input"></textarea></div><div class="form-row"><div class="form-group"><label for="procedureFrequency">Frequency*</label><select id="procedureFrequency" class="form-input" required><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annually">Annually</option><option value="as-needed">As Needed</option></select></div><div class="form-group"><label for="procedureLastExecuted">Last Executed</label><input type="date" id="procedureLastExecuted" class="form-input" /></div></div><div class="form-group"><label for="procedureOwner">Owner</label><input type="text" id="procedureOwner" class="form-input" /></div><div class="procedure-steps-section"><h3>Steps</h3><div id="procedureStepsList"></div><button type="button" class="btn btn-secondary" id="addProcedureStepBtn">+ Add Step</button></div><div class="form-actions"><button type="button" class="btn btn-secondary" id="cancelProcedureBtn">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></form></div></div>
+                <div id="procedureDetailModal" class="modal" style="display:none;"><div class="modal-content modal-large"><span class="modal-close" id="procedureDetailModalClose">&times;</span><div id="procedureDetail"></div></div></div>
+            </section>
 
-            <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-value" id="policiesCount">0</div>
-                    <div class="stat-label">Policies Generated</div>
+            <!-- Documents Page -->
+            <section id="documents-page" class="page">
+                <header class="page-header"><h2>Document Repository</h2><p>Central store for all compliance artifacts</p></header>
+                <div class="module-tabs">
+                    <button class="tab-btn active" data-tab="doc-upload">Upload</button>
+                    <button class="tab-btn" data-tab="doc-library">Library</button>
+                    <button class="tab-btn" data-tab="doc-gap">Gap Analysis</button>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="plansCount">0</div>
-                    <div class="stat-label">Plans Created</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="messagesCount">0</div>
-                    <div class="stat-label">Messages Processed</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="frameworksUsed">9</div>
-                    <div class="stat-label">Frameworks Available</div>
-                </div>
-            </div>
+                <div id="doc-upload" class="tab-panel active"><div class="panel-body">
+                    <h3>Upload Document</h3><p class="hint">Upload any compliance document — auto-classified on ingest.</p>
+                    <div class="form-group"><label for="docUploadTitle">Title</label><input type="text" id="docUploadTitle" placeholder="e.g., Q1 2025 Audit Report" class="form-input" /></div>
+                    <div class="form-group"><label for="docUploadType">Type</label><select id="docUploadType" class="form-input"><option value="">Auto-detect</option><option value="policy">Policy</option><option value="procedure">Procedure</option><option value="evidence">Evidence</option><option value="audit-report">Audit Report</option><option value="security-plan">Security Plan</option><option value="risk-assessment">Risk Assessment</option></select></div>
+                    <div class="form-group"><label>Content</label>
+                        <div class="upload-toggle"><button class="toggle-btn active" data-mode="paste" data-target="doc">Paste</button><button class="toggle-btn" data-mode="file" data-target="doc">File</button></div>
+                        <div id="doc-paste-area"><textarea id="docUploadContent" rows="12" class="form-input mono" placeholder="Paste document content..."></textarea></div>
+                        <div id="doc-file-area" style="display:none;"><input type="file" id="docUploadFile" accept=".txt,.md,.csv,.json,.xml,.html,.htm,.rtf,.pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.ppt,.pptx,.pptm,.one,.onetoc2,.vsd,.vsdx,.msg,.eml,.pub,.accdb,.mpp,.ods,.odt,.odp,.png,.jpg,.jpeg,.gif,.bmp,.tiff,.svg" class="form-input" /><textarea id="docFilePreview" rows="6" class="form-input mono" placeholder="Preview..." readonly style="margin-top:8px;"></textarea></div>
+                    </div>
+                    <div class="form-group maturity-import-options" style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:12px;background:var(--surface-alt, #1a2a3a);">
+                        <h4 style="margin:0 0 8px;">📊 Maturity Import Options</h4>
+                        <p class="hint" style="margin-bottom:8px;">For framework mapping spreadsheets (CIS, CSF, NIST etc.) — imports controls with status.</p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                          <div><label for="maturityDefaultStatus">Default Status</label><select id="maturityDefaultStatus" class="form-input"><option value="implemented">Implemented</option><option value="partially-implemented">Partially Implemented</option><option value="in-progress">In Progress</option><option value="planned">Planned</option><option value="not-implemented">Not Implemented</option></select></div>
+                          <div><label for="maturityDefaultEffectiveness">Default Effectiveness</label><select id="maturityDefaultEffectiveness" class="form-input"><option value="not-tested">Not Tested</option><option value="effective">Effective</option><option value="partially-effective">Partially Effective</option><option value="ineffective">Ineffective</option></select></div>
+                        </div>
+                        <button class="btn btn-success" id="maturityImportBtn" style="margin-top:10px;width:100%;">📊 Import as Maturity Assessment</button>
+                    </div>
+                    <button class="btn btn-primary" id="docUploadBtn" style="margin-top:12px;">📤 Upload Document</button>
+                    <div id="docUploadResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+                <div id="doc-library" class="tab-panel"><div class="panel-body">
+                    <div style="display:flex;gap:12px;margin-bottom:16px;"><input type="text" id="docLibFilter" placeholder="Search docs..." class="form-input" style="flex:1;" /><button class="btn btn-primary" id="docRefreshBtn">🔄 Refresh</button></div>
+                    <div id="documentsList" class="list"><p class="empty-state">No documents yet.</p></div>
+                </div></div>
+                <div id="doc-gap" class="tab-panel"><div class="panel-body">
+                    <h3>Documentation Gap Analysis</h3><p class="hint">Analyze all uploaded documents against a framework.</p>
+                    <div class="form-group"><label for="docGapFramework">Framework</label><select id="docGapFramework" class="form-input"><option value="nist-800-53">NIST SP 800-53</option><option value="nist-csf">NIST CSF 2.0</option><option value="hipaa">HIPAA</option><option value="soc2">SOC 2</option><option value="cmmc">CMMC 2.0</option><option value="pci-dss">PCI DSS</option></select></div>
+                    <button class="btn btn-primary" id="docGapBtn">🔍 Run Gap Analysis</button>
+                    <div id="docGapResult" class="result-panel" style="display:none;"></div>
+                </div></div>
+            </section>
 
-            <div class="activity-container">
-                <h3>Recent Activity</h3>
-                <div id="activityLog" class="activity-log">
-                    <p class="empty-state">No activity yet</p>
+            <!-- Analytics Page -->
+            <section id="analytics-page" class="page">
+                <header class="page-header"><h2>Analytics & Maturity</h2><p>NIST CSF 2.0 maturity posture for the active client</p></header>
+                <div class="module-tabs">
+                    <button class="tab-btn active" data-tab="analytics-csf">CSF 2.0 Maturity</button>
+                    <button class="tab-btn" data-tab="analytics-compare">Framework Comparison</button>
+                    <button class="tab-btn" data-tab="analytics-overview">Overview</button>
+                    <button class="tab-btn" data-tab="analytics-activity">Activity</button>
                 </div>
-                <button class="btn btn-secondary" id="clearHistoryBtn">Clear History</button>
-            </div>
-        </section>
-    </main>
+                <!-- CSF Maturity Tab -->
+                <div id="analytics-csf" class="tab-panel active"><div class="panel-body">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="margin:0;">NIST Cybersecurity Framework 2.0 — Maturity Assessment</h3>
+                        <button class="btn btn-primary" id="refreshCsfMaturity">🔄 Refresh</button>
+                    </div>
+                    <div id="csfMaturityDashboard">
+                        <p class="empty-state">Loading CSF maturity data...</p>
+                    </div>
+                </div></div>
+                <!-- Framework Comparison Tab -->
+                <div id="analytics-compare" class="tab-panel"><div class="panel-body">
+                    <h3>Cross-Framework Maturity Comparison</h3>
+                    <p style="margin-bottom:16px;color:var(--gray);">Compare implementation maturity across any two compliance frameworks side-by-side.</p>
+                    <div class="compare-selector">
+                        <div class="compare-fw-pick">
+                            <label>Framework A</label>
+                            <select id="compareFw1"><option value="">Select framework...</option></select>
+                        </div>
+                        <div class="compare-vs">VS</div>
+                        <div class="compare-fw-pick">
+                            <label>Framework B</label>
+                            <select id="compareFw2"><option value="">Select framework...</option></select>
+                        </div>
+                        <button class="btn btn-primary" id="runComparisonBtn">Compare</button>
+                    </div>
+                    <div id="comparisonDashboard"></div>
+                </div></div>
+                <!-- Overview Tab -->
+                <div id="analytics-overview" class="tab-panel"><div class="panel-body">
+                    <h3>Compliance Overview</h3>
+                    <div class="stats-container"><div class="stat-card"><div class="stat-value" id="policiesCount">0</div><div class="stat-label">Policies</div></div><div class="stat-card"><div class="stat-value" id="plansCount">0</div><div class="stat-label">Plans</div></div><div class="stat-card"><div class="stat-value" id="docsCount">0</div><div class="stat-label">Documents</div></div><div class="stat-card"><div class="stat-value" id="messagesCount">0</div><div class="stat-label">Messages</div></div><div class="stat-card"><div class="stat-value" id="frameworksUsed">0</div><div class="stat-label">Frameworks</div></div></div>
+                </div></div>
+                <!-- Activity Tab -->
+                <div id="analytics-activity" class="tab-panel"><div class="panel-body">
+                    <h3>Recent Activity</h3>
+                    <div id="activityLog" class="activity-log"><p class="empty-state">No activity yet</p></div>
+                    <button class="btn btn-secondary" id="clearHistoryBtn">Clear History</button>
+                </div></div>
+            </section>
+        </main>
+    </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="modal-close" id="settingsModalClose">&times;</span>
-            <h2>Settings</h2>
-            <div class="form-group">
-                <label for="apiEndpoint">API Endpoint</label>
-                <input type="text" id="apiEndpoint" placeholder="http://localhost:3000" />
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="darkModeToggle" /> 
-                    Dark Mode
-                </label>
-            </div>
-            <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
-        </div>
-    </div>
-
+    <div id="settingsModal" class="modal" style="display:none;"><div class="modal-content"><span class="modal-close" id="settingsModalClose">&times;</span><h2>Settings</h2><div class="form-group"><label for="apiEndpoint">API Endpoint</label><input type="text" id="apiEndpoint" class="form-input" placeholder="http://localhost:3000" /></div><div class="form-group"><label><input type="checkbox" id="darkModeToggle" /> Dark Mode</label></div><button class="btn btn-primary" id="saveSettingsBtn">Save</button></div></div>
     <!-- Help Modal -->
-    <div id="helpModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="modal-close" id="helpModalClose">&times;</span>
-            <h2>Help & Documentation</h2>
-            <div class="help-content">
-                <h3>Features</h3>
-                <ul>
-                    <li><strong>Chat:</strong> Interact with AI to generate policies, plans, and analysis</li>
-                    <li><strong>Policies:</strong> Create and manage compliance policies</li>
-                    <li><strong>Plans:</strong> Generate security and compliance plans</li>
-                    <li><strong>Frameworks:</strong> Browse compliance standards and requirements</li>
-                    <li><strong>Controls:</strong> Document and track organizational control implementations</li>
-                    <li><strong>Procedures:</strong> Manage operational procedures with steps and execution tracking</li>
-                    <li><strong>Analytics:</strong> Track your work and activity</li>
-                </ul>
-                <h3>Supported Frameworks</h3>
-                <ul>
-                    <li>NIST CSF 2.0</li>
-                    <li>NIST SP 800-53</li>
-                    <li>NIST CMMC 2.0</li>
-                    <li>HIPAA</li>
-                    <li>HITRUST</li>
-                    <li>SOX</li>
-                    <li>SOC 2</li>
-                    <li>GDPR</li>
-                    <li>CCPA</li>
-                    <li>CJIS</li>
-                    <li>PCI DSS</li>
-                </ul>
-                <h3>Tips</h3>
-                <ul>
-                    <li>Use the chat interface for quick, conversational access</li>
-                    <li>Export policies and plans for offline review</li>
-                    <li>Compare multiple frameworks for alignment</li>
-                    <li>Track control implementations and procedures in the Controls tab</li>
-                    <li>Review analytics to track compliance efforts</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+    <div id="helpModal" class="modal" style="display:none;"><div class="modal-content"><span class="modal-close" id="helpModalClose">&times;</span><h2>Help</h2><div class="help-content"><h3>Multi-Tenant Workspaces</h3><p>Each client has an isolated workspace. Consultants only see clients they created. Use "Grant Access" to share with other consultants.</p><h3>Workflow</h3><ul><li><strong>Upload & Assess:</strong> Upload existing docs</li><li><strong>Gap Analysis:</strong> Compare against frameworks</li><li><strong>CAP & POA&M:</strong> Generate remediation plans</li><li><strong>Generate:</strong> Create new docs via AI</li></ul></div></div></div>
+    <!-- Client Access Modal -->
+    <div id="clientAccessModal" class="modal" style="display:none;"><div class="modal-content"><span class="modal-close" id="clientAccessModalClose">&times;</span><h2>Manage Client Access</h2><div id="clientAccessContent"></div></div></div>
 
     <script type="module" src="/src/client/main.ts"></script>
 </body>

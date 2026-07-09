@@ -5,10 +5,10 @@ export default defineConfig({
   root: '.',
   publicDir: 'public',
   
-  server: {192.168.24.1/
+  server: {
     port: 5173,
     proxy: {
-      '/api': {192.168.24.1/
+      '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
       },

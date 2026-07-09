@@ -11,15 +11,37 @@ import {
   ComplianceFramework
 } from '../types/framework.js';
 import FrameworkRegistry from '../frameworks/index.js';
+import { localStoreService } from './local-store-service.js';
+import ImprovementPlaybookService from './improvement-playbook-service.js';
 
 export class PlanningService {
   private plans: Map<string, SecurityPlan> = new Map();
+  private improvementPlaybookService: ImprovementPlaybookService;
+
+  constructor() {
+    this.improvementPlaybookService = new ImprovementPlaybookService();
+    localStoreService.getPlans().forEach(plan => {
+      this.plans.set(plan.id, plan);
+    });
+  }
 
   async generatePlan(request: PlanGenerationRequest): Promise<SecurityPlan> {
     const id = uuidv4();
     const now = new Date();
+    const injection = this.improvementPlaybookService.buildInjectionBrief({
+      frameworks: request.frameworks,
+      limit: 3
+    });
 
     const sections = await this.generatePlanSections(request);
+    if (injection.guidance) {
+      sections.push({
+        title: 'Continuous Improvement Guidance',
+        content: `Apply the following validated lessons-learned recommendations while executing this plan:\n${injection.guidance}`,
+        responsibilities: ['Plan Owner', 'Compliance Lead', 'Security Operations'],
+        timeline: 'Review recommendations at each plan milestone and quarterly governance checkpoints'
+      });
+    }
     const title = this.generateTitle(request.type, request.title);
 
     const plan: SecurityPlan = {
@@ -36,6 +58,20 @@ export class PlanningService {
     };
 
     this.plans.set(id, plan);
+    this.persist();
+
+    if (injection.insightIds.length > 0) {
+      this.improvementPlaybookService.recordInjectionOutcome({
+        artifactType: 'plan',
+        artifactId: plan.id,
+        artifactTitle: plan.title,
+        organization: plan.organization,
+        frameworks: request.frameworks,
+        injectedInsightIds: injection.insightIds,
+        injectionSummary: injection.guidance
+      });
+    }
+
     return plan;
   }
 
@@ -340,11 +376,16 @@ export class PlanningService {
     };
 
     this.plans.set(id, updated);
+    this.persist();
     return updated;
   }
 
   deletePlan(id: string): boolean {
-    return this.plans.delete(id);
+    const deleted = this.plans.delete(id);
+    if (deleted) {
+      this.persist();
+    }
+    return deleted;
   }
 
   exportPlanAsMarkdown(id: string): string | undefined {
@@ -381,6 +422,10 @@ export class PlanningService {
 
   approvePlan(id: string, approver: string): SecurityPlan | undefined {
     return this.updatePlan(id, { status: 'approved', owner: approver });
+  }
+
+  private persist(): void {
+    localStoreService.setPlans(Array.from(this.plans.values()));
   }
 }
 

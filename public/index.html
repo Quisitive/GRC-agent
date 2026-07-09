@@ -31,6 +31,22 @@
                 <span class="icon">🔗</span>
                 <span>Frameworks</span>
             </button>
+            <button class="nav-item" data-page="controls">
+                <span class="icon">🛡️</span>
+                <span>Controls</span>
+            </button>
+            <button class="nav-item" data-page="procedures">
+                <span class="icon">📝</span>
+                <span>Procedures</span>
+            </button>
+            <button class="nav-item" data-page="continuity">
+                <span class="icon">🔄</span>
+                <span>Continuity</span>
+            </button>
+            <button class="nav-item" data-page="documents">
+                <span class="icon">📁</span>
+                <span>Documents</span>
+            </button>
             <button class="nav-item" data-page="analytics">
                 <span class="icon">📈</span>
                 <span>Analytics</span>
@@ -79,38 +95,227 @@
         <section id="policies-page" class="page">
             <header class="page-header">
                 <h2>Policy Management</h2>
-                <p>Create and manage compliance policies</p>
+                <p>Upload, assess, generate, and manage compliance policies</p>
             </header>
 
-            <div class="form-container">
-                <h3>Generate New Policy</h3>
-                <form id="policyForm">
-                    <div class="form-group">
-                        <label for="policyTitle">Policy Title</label>
-                        <input type="text" id="policyTitle" placeholder="e.g., Access Control Policy" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="organization">Organization Name</label>
-                        <input type="text" id="organization" placeholder="Enter organization name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="policyFrameworks">Compliance Frameworks</label>
-                        <select id="policyFrameworks" multiple size="5">
-                            <option value="nist-csf" selected>NIST CSF 2.0</option>
-                            <option value="nist-800-53">NIST 800-53</option>
-                            <option value="hipaa">HIPAA</option>
-                            <option value="gdpr">GDPR</option>
-                            <option value="soc2">SOC 2</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Generate Policy</button>
-                </form>
+            <div class="tabs" style="display:flex; gap:0; border-bottom:1px solid var(--border-color); padding:0 30px; background:var(--light-gray);">
+                <button class="tab-btn active" onclick="app.switchPolicyTab('upload')">Upload & Assess</button>
+                <button class="tab-btn" onclick="app.switchPolicyTab('gap')">Gap Assessment</button>
+                <button class="tab-btn" onclick="app.switchPolicyTab('cap')">CAP & POA&M</button>
+                <button class="tab-btn" onclick="app.switchPolicyTab('generate')">Generate Policy</button>
+                <button class="tab-btn" onclick="app.switchPolicyTab('library')">Library</button>
             </div>
 
-            <div class="list-container">
-                <h3>Generated Policies</h3>
+            <!-- Upload & Assess Tab -->
+            <div id="pol-tab-upload" class="pol-tab-content" style="display:block; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Upload Policy Document for Assessment</h3>
+                    <p style="margin-bottom:16px; color:#666;">Upload your existing policy documents to assess current state, identify gaps, and generate remediation plans.</p>
+                    <div class="form-group">
+                        <label for="polUploadOrg">Organization</label>
+                        <input type="text" id="polUploadOrg" placeholder="Enter organization name" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="polUploadTitle">Document Title</label>
+                        <input type="text" id="polUploadTitle" placeholder="e.g., Access Control Policy v2.1" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="polUploadFramework">Assess Against Framework</label>
+                        <select id="polUploadFramework" class="form-input">
+                            <optgroup label="NIST">
+                                <option value="nist-csf">NIST CSF 2.0</option>
+                                <option value="nist-800-53">NIST SP 800-53</option>
+                                <option value="nist-800-171">NIST SP 800-171</option>
+                                <option value="cmmc">CMMC 2.0</option>
+                            </optgroup>
+                            <optgroup label="Industry">
+                                <option value="cis-controls">CIS Controls v8</option>
+                                <option value="hitrust">HITRUST CSF</option>
+                                <option value="iso-27001">ISO 27001</option>
+                                <option value="soc2">SOC 2</option>
+                                <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal">
+                                <option value="hipaa">HIPAA</option>
+                                <option value="fedramp">FedRAMP</option>
+                                <option value="cjis">CJIS</option>
+                                <option value="sox">SOX</option>
+                                <option value="glba">GLBA</option>
+                            </optgroup>
+                            <optgroup label="Privacy">
+                                <option value="gdpr">GDPR</option>
+                                <option value="ccpa">CCPA</option>
+                                <option value="nydfs">NYDFS</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Policy Content</label>
+                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                            <button class="tab-btn active" onclick="app.switchPolUploadMode('paste')" id="pol-btn-paste">Paste Text</button>
+                            <button class="tab-btn" onclick="app.switchPolUploadMode('file')" id="pol-btn-file">Upload File</button>
+                        </div>
+                        <div id="pol-paste-mode">
+                            <textarea id="polUploadContent" rows="12" class="form-input" style="font-family:monospace; font-size:13px;" placeholder="Paste your policy document content here..."></textarea>
+                        </div>
+                        <div id="pol-file-mode" style="display:none;">
+                            <input type="file" id="polUploadFile" accept=".txt,.md,.doc,.docx,.pdf,.json" class="form-input" onchange="app.handlePolFileUpload(event)" />
+                            <textarea id="polUploadFileContent" rows="8" class="form-input" style="margin-top:8px; font-family:monospace; font-size:13px;" placeholder="File content appears here..." readonly></textarea>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.uploadAndAssessPolicy()">📤 Upload & Assess Policy</button>
+                </div>
+                <div id="polUploadResult" style="display:none; margin-top:20px;"></div>
+            </div>
+
+            <!-- Gap Assessment Tab -->
+            <div id="pol-tab-gap" class="pol-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Policy Gap Assessment</h3>
+                    <p style="margin-bottom:16px; color:#666;">Select an uploaded policy document and target framework to identify compliance gaps.</p>
+                    <div class="form-group">
+                        <label for="polGapDocSelect">Select Policy Document</label>
+                        <select id="polGapDocSelect" class="form-input">
+                            <option value="">-- Upload a policy first --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="polGapFramework">Target Framework</label>
+                        <select id="polGapFramework" class="form-input">
+                            <optgroup label="NIST">
+                                <option value="nist-csf">NIST CSF 2.0</option>
+                                <option value="nist-800-53">NIST SP 800-53</option>
+                                <option value="nist-800-171">NIST SP 800-171</option>
+                                <option value="cmmc">CMMC 2.0</option>
+                            </optgroup>
+                            <optgroup label="Industry">
+                                <option value="cis-controls">CIS Controls v8</option>
+                                <option value="hitrust">HITRUST CSF</option>
+                                <option value="soc2">SOC 2</option>
+                                <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal">
+                                <option value="hipaa">HIPAA</option>
+                                <option value="fedramp">FedRAMP</option>
+                                <option value="cjis">CJIS</option>
+                                <option value="sox">SOX</option>
+                            </optgroup>
+                            <optgroup label="Privacy">
+                                <option value="gdpr">GDPR</option>
+                                <option value="ccpa">CCPA</option>
+                                <option value="nydfs">NYDFS</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.runPolicyGapAssessment()">🔍 Run Gap Assessment</button>
+                </div>
+                <div id="polGapResult" style="display:none; margin-top:20px;"></div>
+            </div>
+
+            <!-- CAP & POA&M Tab -->
+            <div id="pol-tab-cap" class="pol-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Corrective Action Plan (CAP) & POA&M</h3>
+                    <p style="margin-bottom:16px; color:#666;">Generate a Corrective Action Plan or Plan of Action & Milestones from identified policy gaps.</p>
+                    <div class="form-group">
+                        <label for="polCapOrg">Organization</label>
+                        <input type="text" id="polCapOrg" placeholder="Organization name" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="polCapType">Output Type</label>
+                        <select id="polCapType" class="form-input">
+                            <option value="cap">Corrective Action Plan (CAP)</option>
+                            <option value="poam">Plan of Action & Milestones (POA&M)</option>
+                            <option value="both">Both CAP and POA&M</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="polCapFramework">Framework Context</label>
+                        <select id="polCapFramework" class="form-input">
+                            <option value="nist-csf">NIST CSF 2.0</option>
+                            <option value="nist-800-53">NIST SP 800-53</option>
+                            <option value="nist-800-171">NIST SP 800-171</option>
+                            <option value="cmmc">CMMC 2.0</option>
+                            <option value="hipaa">HIPAA</option>
+                            <option value="pci-dss">PCI DSS 4.0</option>
+                            <option value="soc2">SOC 2</option>
+                            <option value="fedramp">FedRAMP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="polCapGaps">Identified Gaps (one per line, or paste from Gap Assessment)</label>
+                        <textarea id="polCapGaps" rows="8" class="form-input" style="font-family:monospace; font-size:13px;" placeholder="AC-2 — Account Management not fully documented&#10;AC-3 — Access Enforcement lacks RBAC definition&#10;AU-6 — Audit Review procedures missing&#10;IR-4 — Incident Handling plan not current&#10;&#10;Or run a Gap Assessment first and results will auto-populate here."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="polCapTimeline">Target Remediation Timeline</label>
+                        <select id="polCapTimeline" class="form-input">
+                            <option value="30">30 days (Critical)</option>
+                            <option value="60">60 days (High)</option>
+                            <option value="90" selected>90 days (Standard)</option>
+                            <option value="180">180 days (Extended)</option>
+                            <option value="365">1 year (Long-term)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.generatePolicyCAP()">📋 Generate CAP / POA&M</button>
+                </div>
+                <div id="polCapResult" style="display:none; margin-top:20px;"></div>
+            </div>
+
+            <!-- Generate Policy Tab -->
+            <div id="pol-tab-generate" class="pol-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Generate New Policy</h3>
+                    <form id="policyForm">
+                        <div class="form-group">
+                            <label for="policyTitle">Policy Title</label>
+                            <input type="text" id="policyTitle" placeholder="e.g., Access Control Policy" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="organization">Organization Name</label>
+                            <input type="text" id="organization" placeholder="Enter organization name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="policyFrameworks">Compliance Frameworks</label>
+                            <select id="policyFrameworks" multiple size="8" class="form-input">
+                                <optgroup label="NIST">
+                                    <option value="nist-csf" selected>NIST CSF 2.0</option>
+                                    <option value="nist-800-53">NIST SP 800-53</option>
+                                    <option value="nist-800-171">NIST SP 800-171</option>
+                                    <option value="cmmc">CMMC 2.0</option>
+                                </optgroup>
+                                <optgroup label="Industry">
+                                    <option value="cis-controls">CIS Controls v8</option>
+                                    <option value="hitrust">HITRUST CSF</option>
+                                    <option value="soc2">SOC 2</option>
+                                    <option value="pci-dss">PCI DSS 4.0</option>
+                                </optgroup>
+                                <optgroup label="Federal">
+                                    <option value="hipaa">HIPAA</option>
+                                    <option value="fedramp">FedRAMP</option>
+                                    <option value="cjis">CJIS</option>
+                                    <option value="sox">SOX</option>
+                                    <option value="glba">GLBA</option>
+                                </optgroup>
+                                <optgroup label="Privacy">
+                                    <option value="gdpr">GDPR</option>
+                                    <option value="ccpa">CCPA</option>
+                                    <option value="nydfs">NYDFS</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generate Policy</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Library Tab -->
+            <div id="pol-tab-library" class="pol-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:center;">
+                    <input type="text" id="polLibraryFilter" placeholder="Search policies..." class="form-input" style="flex:1;" oninput="app.filterPolicyLibrary()" />
+                    <button class="btn btn-primary" onclick="app.loadPolicyLibrary()">🔄 Refresh</button>
+                </div>
                 <div id="policiesList" class="list">
-                    <p class="empty-state">No policies yet. Generate one above!</p>
+                    <p class="empty-state">No policies yet. Upload or generate one to get started.</p>
                 </div>
             </div>
         </section>
@@ -118,48 +323,231 @@
         <!-- Plans Page -->
         <section id="plans-page" class="page">
             <header class="page-header">
-                <h2>Security Plans</h2>
-                <p>Create comprehensive security and compliance plans</p>
+                <h2>Security & Compliance Plans</h2>
+                <p>Upload, assess, generate, and manage security plans (SSP, IRP, BRP, BC/DR)</p>
             </header>
 
-            <div class="form-container">
-                <h3>Generate New Plan</h3>
-                <form id="planForm">
+            <div class="tabs" style="display:flex; gap:0; border-bottom:1px solid var(--border-color); padding:0 30px; background:var(--light-gray);">
+                <button class="tab-btn active" onclick="app.switchPlanTab('upload')">Upload & Assess</button>
+                <button class="tab-btn" onclick="app.switchPlanTab('gap')">Gap Assessment</button>
+                <button class="tab-btn" onclick="app.switchPlanTab('cap')">CAP & POA&M</button>
+                <button class="tab-btn" onclick="app.switchPlanTab('generate')">Generate Plan</button>
+                <button class="tab-btn" onclick="app.switchPlanTab('library')">Library</button>
+            </div>
+
+            <!-- Upload & Assess Tab -->
+            <div id="plan-tab-upload" class="plan-tab-content" style="display:block; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Upload Plan Document for Assessment</h3>
+                    <p style="margin-bottom:16px; color:#666;">Upload existing security/compliance plans to assess completeness and identify gaps against framework requirements.</p>
                     <div class="form-group">
-                        <label for="planType">Plan Type</label>
-                        <select id="planType" required>
-                            <option value="">Select a plan type</option>
+                        <label for="planUploadOrg">Organization</label>
+                        <input type="text" id="planUploadOrg" placeholder="Enter organization name" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="planUploadTitle">Document Title</label>
+                        <input type="text" id="planUploadTitle" placeholder="e.g., System Security Plan 2025" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="planUploadType">Plan Type</label>
+                        <select id="planUploadType" class="form-input">
+                            <option value="">Auto-detect</option>
                             <option value="ssp">System Security Plan (SSP)</option>
                             <option value="irp">Incident Response Plan (IRP)</option>
                             <option value="brp">Breach Response Plan (BRP)</option>
-                            <option value="bcdr">Business Continuity & Disaster Recovery</option>
-                            <option value="test-failover">Test & Failover Plan</option>
+                            <option value="security-plan">Security Plan</option>
+                            <option value="system-plan">System Plan</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="planTitle">Plan Title</label>
-                        <input type="text" id="planTitle" placeholder="Enter plan title" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="planOrganization">Organization Name</label>
-                        <input type="text" id="planOrganization" placeholder="Enter organization name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="planFrameworks">Compliance Frameworks</label>
-                        <select id="planFrameworks" multiple size="5">
-                            <option value="nist-csf" selected>NIST CSF 2.0</option>
-                            <option value="nist-800-53">NIST 800-53</option>
-                            <option value="hipaa">HIPAA</option>
+                        <label for="planUploadFramework">Assess Against Framework</label>
+                        <select id="planUploadFramework" class="form-input">
+                            <optgroup label="NIST">
+                                <option value="nist-csf">NIST CSF 2.0</option>
+                                <option value="nist-800-53">NIST SP 800-53</option>
+                                <option value="nist-800-171">NIST SP 800-171</option>
+                                <option value="cmmc">CMMC 2.0</option>
+                            </optgroup>
+                            <optgroup label="Industry">
+                                <option value="soc2">SOC 2</option>
+                                <option value="iso-27001">ISO 27001</option>
+                                <option value="hitrust">HITRUST CSF</option>
+                                <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal">
+                                <option value="hipaa">HIPAA</option>
+                                <option value="fedramp">FedRAMP</option>
+                                <option value="cjis">CJIS</option>
+                                <option value="fisma">FISMA</option>
+                            </optgroup>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary">Generate Plan</button>
-                </form>
+                    <div class="form-group">
+                        <label>Plan Content</label>
+                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                            <button class="tab-btn active" onclick="app.switchPlanUploadMode('paste')" id="plan-btn-paste">Paste Text</button>
+                            <button class="tab-btn" onclick="app.switchPlanUploadMode('file')" id="plan-btn-file">Upload File</button>
+                        </div>
+                        <div id="plan-paste-mode">
+                            <textarea id="planUploadContent" rows="12" class="form-input" style="font-family:monospace; font-size:13px;" placeholder="Paste your plan document content here..."></textarea>
+                        </div>
+                        <div id="plan-file-mode" style="display:none;">
+                            <input type="file" id="planUploadFile" accept=".txt,.md,.doc,.docx,.pdf,.json" class="form-input" onchange="app.handlePlanFileUpload(event)" />
+                            <textarea id="planUploadFileContent" rows="8" class="form-input" style="margin-top:8px; font-family:monospace; font-size:13px;" placeholder="File content appears here..." readonly></textarea>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.uploadAndAssessPlan()">📤 Upload & Assess Plan</button>
+                </div>
+                <div id="planUploadResult" style="display:none; margin-top:20px;"></div>
             </div>
 
-            <div class="list-container">
-                <h3>Generated Plans</h3>
+            <!-- Gap Assessment Tab -->
+            <div id="plan-tab-gap" class="plan-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Plan Gap Assessment</h3>
+                    <p style="margin-bottom:16px; color:#666;">Select an uploaded plan and run gap analysis against a compliance framework.</p>
+                    <div class="form-group">
+                        <label for="planGapDocSelect">Select Plan Document</label>
+                        <select id="planGapDocSelect" class="form-input">
+                            <option value="">-- Upload a plan first --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="planGapFramework">Target Framework</label>
+                        <select id="planGapFramework" class="form-input">
+                            <optgroup label="NIST">
+                                <option value="nist-csf">NIST CSF 2.0</option>
+                                <option value="nist-800-53">NIST SP 800-53</option>
+                                <option value="nist-800-171">NIST SP 800-171</option>
+                                <option value="cmmc">CMMC 2.0</option>
+                            </optgroup>
+                            <optgroup label="Industry">
+                                <option value="soc2">SOC 2</option>
+                                <option value="iso-27001">ISO 27001</option>
+                                <option value="hitrust">HITRUST CSF</option>
+                                <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal">
+                                <option value="hipaa">HIPAA</option>
+                                <option value="fedramp">FedRAMP</option>
+                                <option value="cjis">CJIS</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.runPlanGapAssessment()">🔍 Run Gap Assessment</button>
+                </div>
+                <div id="planGapResult" style="display:none; margin-top:20px;"></div>
+            </div>
+
+            <!-- CAP & POA&M Tab -->
+            <div id="plan-tab-cap" class="plan-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Corrective Action Plan (CAP) & POA&M</h3>
+                    <p style="margin-bottom:16px; color:#666;">Generate remediation plans from identified plan gaps.</p>
+                    <div class="form-group">
+                        <label for="planCapOrg">Organization</label>
+                        <input type="text" id="planCapOrg" placeholder="Organization name" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="planCapType">Output Type</label>
+                        <select id="planCapType" class="form-input">
+                            <option value="cap">Corrective Action Plan (CAP)</option>
+                            <option value="poam">Plan of Action & Milestones (POA&M)</option>
+                            <option value="both">Both CAP and POA&M</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="planCapFramework">Framework Context</label>
+                        <select id="planCapFramework" class="form-input">
+                            <option value="nist-800-53">NIST SP 800-53</option>
+                            <option value="nist-csf">NIST CSF 2.0</option>
+                            <option value="nist-800-171">NIST SP 800-171</option>
+                            <option value="cmmc">CMMC 2.0</option>
+                            <option value="hipaa">HIPAA</option>
+                            <option value="fedramp">FedRAMP</option>
+                            <option value="pci-dss">PCI DSS 4.0</option>
+                            <option value="soc2">SOC 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="planCapGaps">Identified Gaps (one per line)</label>
+                        <textarea id="planCapGaps" rows="8" class="form-input" style="font-family:monospace; font-size:13px;" placeholder="CP-2 — Contingency Plan not documented&#10;CP-4 — Contingency Plan Testing not conducted&#10;IR-4 — Incident Handling procedures incomplete&#10;&#10;Or run Gap Assessment first — results auto-populate here."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="planCapTimeline">Target Remediation Timeline</label>
+                        <select id="planCapTimeline" class="form-input">
+                            <option value="30">30 days (Critical)</option>
+                            <option value="60">60 days (High)</option>
+                            <option value="90" selected>90 days (Standard)</option>
+                            <option value="180">180 days (Extended)</option>
+                            <option value="365">1 year (Long-term)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.generatePlanCAP()">📋 Generate CAP / POA&M</button>
+                </div>
+                <div id="planCapResult" style="display:none; margin-top:20px;"></div>
+            </div>
+
+            <!-- Generate Plan Tab -->
+            <div id="plan-tab-generate" class="plan-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Generate New Plan</h3>
+                    <form id="planForm">
+                        <div class="form-group">
+                            <label for="planType">Plan Type</label>
+                            <select id="planType" class="form-input" required>
+                                <option value="">Select a plan type</option>
+                                <option value="ssp">System Security Plan (SSP)</option>
+                                <option value="irp">Incident Response Plan (IRP)</option>
+                                <option value="brp">Breach Response Plan (BRP)</option>
+                                <option value="bcdr">Business Continuity & Disaster Recovery</option>
+                                <option value="test-failover">Test & Failover Plan</option>
+                                <option value="poam">Plan of Action & Milestones (POA&M)</option>
+                                <option value="cap">Corrective Action Plan (CAP)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="planTitle">Plan Title</label>
+                            <input type="text" id="planTitle" placeholder="Enter plan title" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="planOrganization">Organization Name</label>
+                            <input type="text" id="planOrganization" placeholder="Enter organization name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="planFrameworks">Compliance Frameworks</label>
+                            <select id="planFrameworks" multiple size="6" class="form-input">
+                                <optgroup label="NIST">
+                                    <option value="nist-csf" selected>NIST CSF 2.0</option>
+                                    <option value="nist-800-53">NIST SP 800-53</option>
+                                    <option value="nist-800-171">NIST SP 800-171</option>
+                                    <option value="cmmc">CMMC 2.0</option>
+                                </optgroup>
+                                <optgroup label="Industry">
+                                    <option value="soc2">SOC 2</option>
+                                    <option value="pci-dss">PCI DSS 4.0</option>
+                                    <option value="iso-27001">ISO 27001</option>
+                                </optgroup>
+                                <optgroup label="Federal">
+                                    <option value="hipaa">HIPAA</option>
+                                    <option value="fedramp">FedRAMP</option>
+                                    <option value="cjis">CJIS</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generate Plan</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Library Tab -->
+            <div id="plan-tab-library" class="plan-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:center;">
+                    <input type="text" id="planLibraryFilter" placeholder="Search plans..." class="form-input" style="flex:1;" oninput="app.filterPlanLibrary()" />
+                    <button class="btn btn-primary" onclick="app.loadPlanLibrary()">🔄 Refresh</button>
+                </div>
                 <div id="plansList" class="list">
-                    <p class="empty-state">No plans yet. Generate one above!</p>
+                    <p class="empty-state">No plans yet. Upload or generate one to get started.</p>
                 </div>
             </div>
         </section>
@@ -168,15 +556,336 @@
         <section id="frameworks-page" class="page">
             <header class="page-header">
                 <h2>Compliance Frameworks</h2>
-                <p>Browse and compare compliance standards and requirements</p>
+                <p>Browse, compare, and cross-map compliance standards</p>
             </header>
 
-            <div class="search-container">
-                <input type="text" id="frameworkSearch" class="search-input" placeholder="Search frameworks..." />
+            <!-- Tab Bar -->
+            <div class="tabs" style="display:flex; gap:0; border-bottom:1px solid var(--border-color); padding:0 30px; background:var(--light-gray);">
+                <button class="tab-btn active" data-tab="browse" onclick="app.switchFrameworkTab('browse')">Browse</button>
+                <button class="tab-btn" data-tab="compare" onclick="app.switchFrameworkTab('compare')">Cross-Compare</button>
+                <button class="tab-btn" data-tab="compliance" onclick="app.switchFrameworkTab('compliance')">Compliance Posture</button>
             </div>
 
-            <div id="frameworksList" class="frameworks-grid">
-                <!-- Populated by JavaScript -->
+            <!-- Browse Tab -->
+            <div id="fw-tab-browse" class="fw-tab-content" style="display:block; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="search-container">
+                    <input type="text" id="frameworkSearch" class="search-input" placeholder="Search frameworks and controls..." />
+                </div>
+                <div id="frameworksList" class="frameworks-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Cross-Compare Tab -->
+            <div id="fw-tab-compare" class="fw-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="margin-bottom:20px; background:var(--light-gray); padding:15px; border-radius:6px;">
+                    <h3>Select 2-3 Frameworks to Compare</h3>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
+                        <select id="compareFramework1" class="compare-select">
+                            <option value="">Framework 1</option>
+                            <optgroup label="NIST Frameworks">
+                              <option value="nist-csf">NIST CSF 2.0</option>
+                              <option value="nist-800-53">NIST SP 800-53</option>
+                              <option value="nist-800-171">NIST SP 800-171</option>
+                              <option value="nist-cmmc">CMMC 2.0</option>
+                              <option value="nist-ai-rmf">NIST AI RMF</option>
+                            </optgroup>
+                            <optgroup label="Industry Standards">
+                              <option value="cis-controls">CIS Controls v8</option>
+                              <option value="hitrust">HITRUST CSF v11</option>
+                              <option value="iso-27001">ISO 27001:2022</option>
+                              <option value="iso-27701">ISO 27701 (Privacy)</option>
+                              <option value="soc2">SOC 2</option>
+                              <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal Regulations">
+                              <option value="hipaa">HIPAA</option>
+                              <option value="fedramp">FedRAMP</option>
+                              <option value="fisma">FISMA</option>
+                              <option value="cjis">CJIS</option>
+                              <option value="ferpa">FERPA</option>
+                              <option value="coppa">COPPA</option>
+                              <option value="sox">SOX</option>
+                              <option value="glba">GLBA</option>
+                            </optgroup>
+                            <optgroup label="Privacy Laws">
+                              <option value="gdpr">GDPR</option>
+                              <option value="ccpa">CCPA</option>
+                              <option value="cpra">CPRA (California)</option>
+                              <option value="vcdpa">VCDPA (Virginia)</option>
+                              <option value="cpa-co">CPA (Colorado)</option>
+                              <option value="ctdpa">CTDPA (Connecticut)</option>
+                              <option value="texas-hb4">TDPSA (Texas)</option>
+                              <option value="nydfs">NYDFS 23 NYCRR 500</option>
+                              <option value="shield-act">NY SHIELD Act</option>
+                              <option value="cmia">CMIA (California)</option>
+                            </optgroup>
+                            <optgroup label="AI & Emerging">
+                              <option value="eu-ai-act">EU AI Act</option>
+                              <option value="eo-14110">EO 14110 (AI Safety)</option>
+                            </optgroup>
+                        </select>
+                        <select id="compareFramework2" class="compare-select">
+                            <option value="">Framework 2</option>
+                            <optgroup label="NIST Frameworks">
+                              <option value="nist-csf">NIST CSF 2.0</option>
+                              <option value="nist-800-53">NIST SP 800-53</option>
+                              <option value="nist-800-171">NIST SP 800-171</option>
+                              <option value="nist-cmmc">CMMC 2.0</option>
+                              <option value="nist-ai-rmf">NIST AI RMF</option>
+                            </optgroup>
+                            <optgroup label="Industry Standards">
+                              <option value="cis-controls">CIS Controls v8</option>
+                              <option value="hitrust">HITRUST CSF v11</option>
+                              <option value="iso-27001">ISO 27001:2022</option>
+                              <option value="iso-27701">ISO 27701 (Privacy)</option>
+                              <option value="soc2">SOC 2</option>
+                              <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal Regulations">
+                              <option value="hipaa">HIPAA</option>
+                              <option value="fedramp">FedRAMP</option>
+                              <option value="fisma">FISMA</option>
+                              <option value="cjis">CJIS</option>
+                              <option value="ferpa">FERPA</option>
+                              <option value="coppa">COPPA</option>
+                              <option value="sox">SOX</option>
+                              <option value="glba">GLBA</option>
+                            </optgroup>
+                            <optgroup label="Privacy Laws">
+                              <option value="gdpr">GDPR</option>
+                              <option value="ccpa">CCPA</option>
+                              <option value="cpra">CPRA (California)</option>
+                              <option value="vcdpa">VCDPA (Virginia)</option>
+                              <option value="cpa-co">CPA (Colorado)</option>
+                              <option value="ctdpa">CTDPA (Connecticut)</option>
+                              <option value="texas-hb4">TDPSA (Texas)</option>
+                              <option value="nydfs">NYDFS 23 NYCRR 500</option>
+                              <option value="shield-act">NY SHIELD Act</option>
+                              <option value="cmia">CMIA (California)</option>
+                            </optgroup>
+                            <optgroup label="AI & Emerging">
+                              <option value="eu-ai-act">EU AI Act</option>
+                              <option value="eo-14110">EO 14110 (AI Safety)</option>
+                            </optgroup>
+                        </select>
+                        <select id="compareFramework3" class="compare-select">
+                            <option value="">(Optional) Framework 3</option>
+                            <optgroup label="NIST Frameworks">
+                              <option value="nist-csf">NIST CSF 2.0</option>
+                              <option value="nist-800-53">NIST SP 800-53</option>
+                              <option value="nist-800-171">NIST SP 800-171</option>
+                              <option value="nist-cmmc">CMMC 2.0</option>
+                              <option value="nist-ai-rmf">NIST AI RMF</option>
+                            </optgroup>
+                            <optgroup label="Industry Standards">
+                              <option value="cis-controls">CIS Controls v8</option>
+                              <option value="hitrust">HITRUST CSF v11</option>
+                              <option value="iso-27001">ISO 27001:2022</option>
+                              <option value="iso-27701">ISO 27701 (Privacy)</option>
+                              <option value="soc2">SOC 2</option>
+                              <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal Regulations">
+                              <option value="hipaa">HIPAA</option>
+                              <option value="fedramp">FedRAMP</option>
+                              <option value="fisma">FISMA</option>
+                              <option value="cjis">CJIS</option>
+                              <option value="ferpa">FERPA</option>
+                              <option value="coppa">COPPA</option>
+                              <option value="sox">SOX</option>
+                              <option value="glba">GLBA</option>
+                            </optgroup>
+                            <optgroup label="Privacy Laws">
+                              <option value="gdpr">GDPR</option>
+                              <option value="ccpa">CCPA</option>
+                              <option value="cpra">CPRA (California)</option>
+                              <option value="vcdpa">VCDPA (Virginia)</option>
+                              <option value="cpa-co">CPA (Colorado)</option>
+                              <option value="ctdpa">CTDPA (Connecticut)</option>
+                              <option value="texas-hb4">TDPSA (Texas)</option>
+                              <option value="nydfs">NYDFS 23 NYCRR 500</option>
+                              <option value="shield-act">NY SHIELD Act</option>
+                              <option value="cmia">CMIA (California)</option>
+                            </optgroup>
+                            <optgroup label="AI & Emerging">
+                              <option value="eu-ai-act">EU AI Act</option>
+                              <option value="eo-14110">EO 14110 (AI Safety)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top:12px;" onclick="app.runComparison()">Compare Frameworks</button>
+                </div>
+                <div id="comparisonResults">
+                    <p class="empty-state">Select frameworks above and click Compare to see a control mapping matrix.</p>
+                </div>
+            </div>
+
+            <!-- Compliance Posture Tab -->
+            <div id="fw-tab-compliance" class="fw-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="margin-bottom:20px; background:var(--light-gray); padding:15px; border-radius:6px;">
+                    <h3>Ingest Organization Compliance</h3>
+                    <p style="font-size:12px; color:var(--gray); margin-bottom:12px;">
+                        Enter your org's compliance status against a framework, then cross-map to other frameworks.
+                    </p>
+                    <div class="form-group">
+                        <label for="complianceOrg">Organization Name</label>
+                        <input type="text" id="complianceOrg" placeholder="e.g., Acme Corp" />
+                    </div>
+                    <div class="form-group">
+                        <label for="complianceFramework">Source Framework</label>
+                        <select id="complianceFramework">
+                            <optgroup label="NIST Frameworks">
+                              <option value="nist-csf">NIST CSF 2.0</option>
+                              <option value="nist-800-53">NIST SP 800-53</option>
+                              <option value="nist-800-171">NIST SP 800-171</option>
+                              <option value="nist-cmmc">CMMC 2.0</option>
+                              <option value="nist-ai-rmf">NIST AI RMF</option>
+                            </optgroup>
+                            <optgroup label="Industry Standards">
+                              <option value="cis-controls">CIS Controls v8</option>
+                              <option value="hitrust">HITRUST CSF v11</option>
+                              <option value="iso-27001">ISO 27001:2022</option>
+                              <option value="iso-27701">ISO 27701 (Privacy)</option>
+                              <option value="soc2">SOC 2</option>
+                              <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal Regulations">
+                              <option value="hipaa">HIPAA</option>
+                              <option value="fedramp">FedRAMP</option>
+                              <option value="fisma">FISMA</option>
+                              <option value="cjis">CJIS</option>
+                              <option value="ferpa">FERPA</option>
+                              <option value="coppa">COPPA</option>
+                              <option value="sox">SOX</option>
+                              <option value="glba">GLBA</option>
+                            </optgroup>
+                            <optgroup label="Privacy Laws">
+                              <option value="gdpr">GDPR</option>
+                              <option value="ccpa">CCPA</option>
+                              <option value="cpra">CPRA (California)</option>
+                              <option value="vcdpa">VCDPA (Virginia)</option>
+                              <option value="cpa-co">CPA (Colorado)</option>
+                              <option value="ctdpa">CTDPA (Connecticut)</option>
+                              <option value="texas-hb4">TDPSA (Texas)</option>
+                              <option value="nydfs">NYDFS 23 NYCRR 500</option>
+                              <option value="shield-act">NY SHIELD Act</option>
+                              <option value="cmia">CMIA (California)</option>
+                            </optgroup>
+                            <optgroup label="AI & Emerging">
+                              <option value="eu-ai-act">EU AI Act</option>
+                              <option value="eo-14110">EO 14110 (AI Safety)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="complianceData">Control Statuses (one per line: <code>controlId, status</code>)</label>
+                        <textarea id="complianceData" rows="8" placeholder="CIS.1, implemented&#10;CIS.2, partially-implemented&#10;CIS.3, not-implemented&#10;CIS.4, implemented&#10;CIS.5, in-progress"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.ingestCompliance()">Ingest Compliance Data</button>
+                </div>
+
+                <div class="form-container" style="margin-bottom:20px; background:var(--light-gray); padding:15px; border-radius:6px;">
+                    <h3>Cross-Map to Target Frameworks</h3>
+                    <p style="font-size:12px; color:var(--gray); margin-bottom:12px;">
+                        After ingesting, select target frameworks to see how your posture transfers.
+                    </p>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <select id="crossmapTarget1" class="compare-select">
+                            <option value="">Target Framework 1</option>
+                            <optgroup label="NIST Frameworks">
+                              <option value="nist-csf">NIST CSF 2.0</option>
+                              <option value="nist-800-53">NIST SP 800-53</option>
+                              <option value="nist-800-171">NIST SP 800-171</option>
+                              <option value="nist-cmmc">CMMC 2.0</option>
+                              <option value="nist-ai-rmf">NIST AI RMF</option>
+                            </optgroup>
+                            <optgroup label="Industry Standards">
+                              <option value="cis-controls">CIS Controls v8</option>
+                              <option value="hitrust">HITRUST CSF v11</option>
+                              <option value="iso-27001">ISO 27001:2022</option>
+                              <option value="iso-27701">ISO 27701 (Privacy)</option>
+                              <option value="soc2">SOC 2</option>
+                              <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal Regulations">
+                              <option value="hipaa">HIPAA</option>
+                              <option value="fedramp">FedRAMP</option>
+                              <option value="fisma">FISMA</option>
+                              <option value="cjis">CJIS</option>
+                              <option value="ferpa">FERPA</option>
+                              <option value="coppa">COPPA</option>
+                              <option value="sox">SOX</option>
+                              <option value="glba">GLBA</option>
+                            </optgroup>
+                            <optgroup label="Privacy Laws">
+                              <option value="gdpr">GDPR</option>
+                              <option value="ccpa">CCPA</option>
+                              <option value="cpra">CPRA (California)</option>
+                              <option value="vcdpa">VCDPA (Virginia)</option>
+                              <option value="cpa-co">CPA (Colorado)</option>
+                              <option value="ctdpa">CTDPA (Connecticut)</option>
+                              <option value="texas-hb4">TDPSA (Texas)</option>
+                              <option value="nydfs">NYDFS 23 NYCRR 500</option>
+                              <option value="shield-act">NY SHIELD Act</option>
+                              <option value="cmia">CMIA (California)</option>
+                            </optgroup>
+                            <optgroup label="AI & Emerging">
+                              <option value="eu-ai-act">EU AI Act</option>
+                              <option value="eo-14110">EO 14110 (AI Safety)</option>
+                            </optgroup>
+                        </select>
+                        <select id="crossmapTarget2" class="compare-select">
+                            <option value="">(Optional) Target 2</option>
+                            <optgroup label="NIST Frameworks">
+                              <option value="nist-csf">NIST CSF 2.0</option>
+                              <option value="nist-800-53">NIST SP 800-53</option>
+                              <option value="nist-800-171">NIST SP 800-171</option>
+                              <option value="nist-cmmc">CMMC 2.0</option>
+                              <option value="nist-ai-rmf">NIST AI RMF</option>
+                            </optgroup>
+                            <optgroup label="Industry Standards">
+                              <option value="cis-controls">CIS Controls v8</option>
+                              <option value="hitrust">HITRUST CSF v11</option>
+                              <option value="iso-27001">ISO 27001:2022</option>
+                              <option value="iso-27701">ISO 27701 (Privacy)</option>
+                              <option value="soc2">SOC 2</option>
+                              <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal Regulations">
+                              <option value="hipaa">HIPAA</option>
+                              <option value="fedramp">FedRAMP</option>
+                              <option value="fisma">FISMA</option>
+                              <option value="cjis">CJIS</option>
+                              <option value="ferpa">FERPA</option>
+                              <option value="coppa">COPPA</option>
+                              <option value="sox">SOX</option>
+                              <option value="glba">GLBA</option>
+                            </optgroup>
+                            <optgroup label="Privacy Laws">
+                              <option value="gdpr">GDPR</option>
+                              <option value="ccpa">CCPA</option>
+                              <option value="cpra">CPRA (California)</option>
+                              <option value="vcdpa">VCDPA (Virginia)</option>
+                              <option value="cpa-co">CPA (Colorado)</option>
+                              <option value="ctdpa">CTDPA (Connecticut)</option>
+                              <option value="texas-hb4">TDPSA (Texas)</option>
+                              <option value="nydfs">NYDFS 23 NYCRR 500</option>
+                              <option value="shield-act">NY SHIELD Act</option>
+                              <option value="cmia">CMIA (California)</option>
+                            </optgroup>
+                            <optgroup label="AI & Emerging">
+                              <option value="eu-ai-act">EU AI Act</option>
+                              <option value="eo-14110">EO 14110 (AI Safety)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top:12px;" onclick="app.runCrossMap()">Cross-Map Posture</button>
+                </div>
+
+                <div id="crossmapResults">
+                    <p class="empty-state">Ingest your compliance data above, then cross-map to see coverage across frameworks.</p>
+                </div>
             </div>
 
             <!-- Framework Detail Modal -->
@@ -187,6 +896,544 @@
                         <!-- Populated by JavaScript -->
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Controls Page -->
+        <section id="controls-page" class="page">
+            <header class="page-header">
+                <h2>Control Implementations</h2>
+                <p>Track organizational control implementations and their compliance status</p>
+            </header>
+
+            <div class="tabs" style="display:flex; gap:0; border-bottom:1px solid var(--border-color); padding:0 30px; background:var(--light-gray);">
+                <button class="tab-btn active" onclick="app.switchControlsTab('manage')">Manage Controls</button>
+                <button class="tab-btn" onclick="app.switchControlsTab('create')">Add Control</button>
+                <button class="tab-btn" onclick="app.switchControlsTab('upload')">Upload & Analyze</button>
+            </div>
+
+            <!-- Manage Controls Tab -->
+            <div id="ctrl-tab-manage" class="ctrl-tab-content" style="display:block; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:center;">
+                    <input type="text" id="controlSearchFilter" placeholder="Search controls..." class="form-input" style="flex:1;" oninput="app.filterControls()" />
+                    <select id="controlFrameworkFilter" class="form-input" style="width:200px;" onchange="app.loadControls()">
+                        <option value="">All Frameworks</option>
+                        <option value="nist-csf">NIST CSF</option>
+                        <option value="nist-800-53">NIST 800-53</option>
+                        <option value="hipaa">HIPAA</option>
+                        <option value="soc2">SOC 2</option>
+                        <option value="pci-dss">PCI DSS</option>
+                        <option value="cis-controls">CIS Controls</option>
+                        <option value="cmmc">CMMC</option>
+                        <option value="gdpr">GDPR</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="app.loadControls()">🔄 Refresh</button>
+                </div>
+                <div id="controlsList" class="controls-grid">
+                    <p class="empty-state">Click "Refresh" or add your first control implementation.</p>
+                </div>
+            </div>
+
+            <!-- Create Control Tab -->
+            <div id="ctrl-tab-create" class="ctrl-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Register Control Implementation</h3>
+                    <div class="form-group">
+                        <label for="ctrlOrganization">Organization</label>
+                        <input type="text" id="ctrlOrganization" placeholder="e.g., Acme Corp" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="ctrlFramework">Framework</label>
+                        <select id="ctrlFramework" class="form-input" required>
+                            <optgroup label="NIST">
+                                <option value="nist-csf">NIST CSF 2.0</option>
+                                <option value="nist-800-53">NIST SP 800-53</option>
+                                <option value="nist-800-171">NIST SP 800-171</option>
+                                <option value="cmmc">CMMC 2.0</option>
+                            </optgroup>
+                            <optgroup label="Industry">
+                                <option value="cis-controls">CIS Controls v8</option>
+                                <option value="hitrust">HITRUST CSF</option>
+                                <option value="soc2">SOC 2</option>
+                                <option value="pci-dss">PCI DSS 4.0</option>
+                                <option value="iso-27001">ISO 27001</option>
+                            </optgroup>
+                            <optgroup label="Federal">
+                                <option value="hipaa">HIPAA</option>
+                                <option value="cjis">CJIS</option>
+                                <option value="sox">SOX</option>
+                                <option value="glba">GLBA</option>
+                            </optgroup>
+                            <optgroup label="Privacy">
+                                <option value="gdpr">GDPR</option>
+                                <option value="ccpa">CCPA</option>
+                                <option value="nydfs">NYDFS</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ctrlControlId">Framework Control ID</label>
+                        <input type="text" id="ctrlControlId" placeholder="e.g., AC-2, CIS.1, 164.312(a)" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="ctrlTitle">Implementation Title</label>
+                        <input type="text" id="ctrlTitle" placeholder="e.g., Multi-Factor Authentication for Admin Access" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="ctrlDescription">Description</label>
+                        <textarea id="ctrlDescription" rows="4" class="form-input" placeholder="Describe how this control is implemented in your environment..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="ctrlStatus">Implementation Status</label>
+                        <select id="ctrlStatus" class="form-input">
+                            <option value="implemented">Implemented</option>
+                            <option value="partially-implemented">Partially Implemented</option>
+                            <option value="planned">Planned</option>
+                            <option value="not-implemented">Not Implemented</option>
+                            <option value="not-applicable">Not Applicable</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ctrlEvidence">Evidence / Notes</label>
+                        <textarea id="ctrlEvidence" rows="3" class="form-input" placeholder="Links to evidence, ticket numbers, review dates..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="ctrlOwner">Control Owner</label>
+                        <input type="text" id="ctrlOwner" placeholder="e.g., Security Engineering Team" class="form-input" />
+                    </div>
+                    <button class="btn btn-primary" onclick="app.createControl()">✅ Register Control</button>
+                </div>
+                <div id="createControlResult" style="display:none; margin-top:16px; padding:12px; background:#d4edda; border-radius:6px; border-left:4px solid #27ae60;"></div>
+            </div>
+
+            <!-- Upload & Analyze Controls Tab -->
+            <div id="ctrl-tab-upload" class="ctrl-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Upload Control Evidence for Analysis</h3>
+                    <p style="margin-bottom:16px; color:#666;">Upload existing control documentation (spreadsheets, matrices, evidence) to auto-extract and register control implementations.</p>
+                    <div class="form-group">
+                        <label for="ctrlUploadOrg">Organization</label>
+                        <input type="text" id="ctrlUploadOrg" placeholder="Organization name" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="ctrlUploadFramework">Target Framework</label>
+                        <select id="ctrlUploadFramework" class="form-input">
+                            <option value="">Auto-detect</option>
+                            <option value="nist-csf">NIST CSF 2.0</option>
+                            <option value="nist-800-53">NIST SP 800-53</option>
+                            <option value="hipaa">HIPAA</option>
+                            <option value="soc2">SOC 2</option>
+                            <option value="pci-dss">PCI DSS 4.0</option>
+                            <option value="cis-controls">CIS Controls</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Content (paste control matrix or evidence text)</label>
+                        <textarea id="ctrlUploadContent" rows="10" class="form-input" style="font-family:monospace; font-size:13px;" placeholder="Paste your control implementation matrix, evidence list, or documentation here...&#10;&#10;Example:&#10;AC-2, Implemented, MFA enforced via Azure AD&#10;AC-3, Partially Implemented, RBAC in progress&#10;AC-6, Planned, Least privilege review scheduled Q3"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.uploadControlEvidence()">📤 Upload & Analyze</button>
+                </div>
+                <div id="ctrlUploadResult" style="display:none; margin-top:16px; padding:16px; background:var(--light-gray); border-radius:8px; border-left:4px solid var(--primary-color);"></div>
+            </div>
+        </section>
+
+        <!-- Procedures Page -->
+        <section id="procedures-page" class="page">
+            <header class="page-header">
+                <h2>Procedure Management</h2>
+                <p>Create and manage operational procedures linked to control implementations</p>
+            </header>
+
+            <div class="tabs" style="display:flex; gap:0; border-bottom:1px solid var(--border-color); padding:0 30px; background:var(--light-gray);">
+                <button class="tab-btn active" onclick="app.switchProceduresTab('list')">Procedures</button>
+                <button class="tab-btn" onclick="app.switchProceduresTab('create')">Create Procedure</button>
+                <button class="tab-btn" onclick="app.switchProceduresTab('upload')">Upload & Analyze</button>
+            </div>
+
+            <!-- Procedures List Tab -->
+            <div id="proc-tab-list" class="proc-tab-content" style="display:block; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:center;">
+                    <input type="text" id="procSearchFilter" placeholder="Search procedures..." class="form-input" style="flex:1;" oninput="app.filterProcedures()" />
+                    <button class="btn btn-primary" onclick="app.loadProcedures()">🔄 Refresh</button>
+                </div>
+                <div id="proceduresList" class="procedures-grid">
+                    <p class="empty-state">Click "Refresh" to load procedures, or create your first procedure.</p>
+                </div>
+            </div>
+
+            <!-- Create Procedure Tab -->
+            <div id="proc-tab-create" class="proc-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Create New Procedure</h3>
+                    <div class="form-group">
+                        <label for="procControlId">Linked Control (select or enter ID)</label>
+                        <select id="procControlId" class="form-input">
+                            <option value="">-- Load controls first (Refresh on Controls page) --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="procName">Procedure Name</label>
+                        <input type="text" id="procName" placeholder="e.g., Quarterly Access Review Procedure" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="procDescription">Description</label>
+                        <textarea id="procDescription" rows="3" class="form-input" placeholder="Purpose and scope of this procedure..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="procFrequency">Execution Frequency</label>
+                        <select id="procFrequency" class="form-input" required>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly" selected>Quarterly</option>
+                            <option value="annually">Annually</option>
+                            <option value="on-demand">On-Demand / Event-Driven</option>
+                            <option value="continuous">Continuous</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="procOwner">Responsible Party / Owner</label>
+                        <input type="text" id="procOwner" placeholder="e.g., IT Security Team" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="procSteps">Procedure Steps (one per line)</label>
+                        <textarea id="procSteps" rows="6" class="form-input" style="font-family:monospace;" placeholder="Step 1: Pull user access list from IAM system&#10;Step 2: Compare against HR active directory&#10;Step 3: Flag terminated users with active access&#10;Step 4: Generate removal tickets&#10;Step 5: Verify removal within 24 hours&#10;Step 6: Document in audit log"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.createProcedure()">📝 Create Procedure</button>
+                </div>
+                <div id="createProcResult" style="display:none; margin-top:16px; padding:12px; background:#d4edda; border-radius:6px; border-left:4px solid #27ae60;"></div>
+            </div>
+
+            <!-- Upload & Analyze Procedures Tab -->
+            <div id="proc-tab-upload" class="proc-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Upload Existing Procedures for Analysis</h3>
+                    <p style="margin-bottom:16px; color:#666;">Upload existing procedure documents to extract steps, identify gaps, and link them to framework controls.</p>
+                    <div class="form-group">
+                        <label for="procUploadOrg">Organization</label>
+                        <input type="text" id="procUploadOrg" placeholder="Organization name" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="procUploadTitle">Document Title</label>
+                        <input type="text" id="procUploadTitle" placeholder="e.g., Incident Response Procedures v3.0" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label>Procedure Content (paste or type)</label>
+                        <textarea id="procUploadContent" rows="12" class="form-input" style="font-family:monospace; font-size:13px;" placeholder="Paste your procedure document here...&#10;&#10;The system will auto-detect:&#10;- Linked framework controls&#10;- Procedure steps and frequency&#10;- Coverage against target frameworks"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.uploadProcedureDoc()">📤 Upload & Analyze</button>
+                </div>
+                <div id="procUploadResult" style="display:none; margin-top:16px; padding:16px; background:var(--light-gray); border-radius:8px; border-left:4px solid var(--primary-color);"></div>
+            </div>
+        </section>
+
+        <!-- Continuity Page -->
+        <section id="continuity-page" class="page">
+            <header class="page-header">
+                <h2>Business Continuity</h2>
+                <p>Business Continuity & Disaster Recovery planning, testing, and documentation</p>
+            </header>
+
+            <div class="tabs" style="display:flex; gap:0; border-bottom:1px solid var(--border-color); padding:0 30px; background:var(--light-gray);">
+                <button class="tab-btn active" onclick="app.switchContinuityTab('overview')">Overview</button>
+                <button class="tab-btn" onclick="app.switchContinuityTab('generate')">Generate BC/DR Plan</button>
+                <button class="tab-btn" onclick="app.switchContinuityTab('upload')">Upload & Analyze</button>
+                <button class="tab-btn" onclick="app.switchContinuityTab('test')">Test Plans</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="bc-tab-overview" class="bc-tab-content" style="display:block; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="bcPlansCount">0</div>
+                        <div class="stat-label">BC/DR Plans</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="bcTestsCount">0</div>
+                        <div class="stat-label">Tests Conducted</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="bcRtoTarget">—</div>
+                        <div class="stat-label">RTO Target</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="bcRpoTarget">—</div>
+                        <div class="stat-label">RPO Target</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px; margin-bottom:16px;">
+                    <button class="btn btn-primary" onclick="app.loadBCPlans()">🔄 Load BC/DR Plans</button>
+                </div>
+                <div id="bcPlansList">
+                    <p class="empty-state">Generate or upload a Business Continuity plan to get started.</p>
+                </div>
+            </div>
+
+            <!-- Generate BC/DR Plan Tab -->
+            <div id="bc-tab-generate" class="bc-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Generate Business Continuity / Disaster Recovery Plan</h3>
+                    <div class="form-group">
+                        <label for="bcOrganization">Organization</label>
+                        <input type="text" id="bcOrganization" placeholder="Organization name" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="bcPlanType">Plan Type</label>
+                        <select id="bcPlanType" class="form-input">
+                            <option value="bcdr">Business Continuity & Disaster Recovery (BC/DR)</option>
+                            <option value="bcp">Business Continuity Plan (BCP)</option>
+                            <option value="drp">Disaster Recovery Plan (DRP)</option>
+                            <option value="test-failover">Test & Failover Plan</option>
+                            <option value="crisis-comm">Crisis Communication Plan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bcTitle">Plan Title</label>
+                        <input type="text" id="bcTitle" placeholder="e.g., Enterprise BC/DR Plan 2025" class="form-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="bcRTO">Recovery Time Objective (RTO)</label>
+                        <input type="text" id="bcRTO" placeholder="e.g., 4 hours, 24 hours" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="bcRPO">Recovery Point Objective (RPO)</label>
+                        <input type="text" id="bcRPO" placeholder="e.g., 1 hour, 15 minutes" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="bcFrameworks">Aligned Frameworks</label>
+                        <select id="bcFrameworks" multiple size="5" class="form-input">
+                            <option value="nist-csf" selected>NIST CSF 2.0</option>
+                            <option value="nist-800-53">NIST SP 800-53</option>
+                            <option value="iso-27001">ISO 27001</option>
+                            <option value="soc2">SOC 2</option>
+                            <option value="hipaa">HIPAA</option>
+                            <option value="pci-dss">PCI DSS</option>
+                            <option value="cjis">CJIS</option>
+                            <option value="fedramp">FedRAMP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bcCriticalSystems">Critical Systems (one per line)</label>
+                        <textarea id="bcCriticalSystems" rows="4" class="form-input" placeholder="e.g.,&#10;ERP System - Priority 1&#10;Email/Exchange - Priority 1&#10;Customer Portal - Priority 2&#10;Internal Wiki - Priority 3"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.generateBCPlan()">📋 Generate Plan</button>
+                </div>
+                <div id="bcGenerateResult" style="display:none; margin-top:16px; padding:16px; background:var(--light-gray); border-radius:8px; border-left:4px solid var(--primary-color);"></div>
+            </div>
+
+            <!-- Upload & Analyze Tab -->
+            <div id="bc-tab-upload" class="bc-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Upload Existing BC/DR Documentation</h3>
+                    <p style="margin-bottom:16px; color:#666;">Upload your current business continuity or disaster recovery documentation for gap analysis against industry standards.</p>
+                    <div class="form-group">
+                        <label for="bcUploadOrg">Organization</label>
+                        <input type="text" id="bcUploadOrg" placeholder="Organization name" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="bcUploadTitle">Document Title</label>
+                        <input type="text" id="bcUploadTitle" placeholder="e.g., Current BC Plan 2024" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="bcUploadFramework">Analyze Against Framework</label>
+                        <select id="bcUploadFramework" class="form-input">
+                            <option value="nist-csf">NIST CSF 2.0 (RC/PR.IP categories)</option>
+                            <option value="nist-800-53">NIST 800-53 (CP family)</option>
+                            <option value="iso-27001">ISO 27001 (A.17 Continuity)</option>
+                            <option value="soc2">SOC 2 (Availability)</option>
+                            <option value="hipaa">HIPAA (Contingency Plan)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Plan Content</label>
+                        <textarea id="bcUploadContent" rows="12" class="form-input" style="font-family:monospace; font-size:13px;" placeholder="Paste your existing BC/DR plan content here...&#10;&#10;The system will analyze for:&#10;- RTO/RPO definitions&#10;- Critical system identification&#10;- Communication plans&#10;- Recovery procedures&#10;- Testing schedules&#10;- Framework control coverage"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.uploadBCDoc()">📤 Upload & Analyze</button>
+                </div>
+                <div id="bcUploadResult" style="display:none; margin-top:16px; padding:16px; background:var(--light-gray); border-radius:8px; border-left:4px solid var(--primary-color);"></div>
+            </div>
+
+            <!-- Test Plans Tab -->
+            <div id="bc-tab-test" class="bc-tab-content" style="display:none; padding:20px 30px; overflow-y:auto; flex:1;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Record Continuity Test / Exercise</h3>
+                    <p style="margin-bottom:16px; color:#666;">Document tabletop exercises, failover tests, and disaster recovery drills.</p>
+                    <div class="form-group">
+                        <label for="testType">Test Type</label>
+                        <select id="testType" class="form-input">
+                            <option value="tabletop">Tabletop Exercise</option>
+                            <option value="walkthrough">Structured Walkthrough</option>
+                            <option value="simulation">Simulation / Drill</option>
+                            <option value="failover">Failover Test</option>
+                            <option value="full-interruption">Full Interruption Test</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="testDate">Test Date</label>
+                        <input type="date" id="testDate" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="testScenario">Scenario Description</label>
+                        <textarea id="testScenario" rows="3" class="form-input" placeholder="e.g., Ransomware attack targeting primary data center..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="testParticipants">Participants</label>
+                        <input type="text" id="testParticipants" placeholder="e.g., CISO, IT Ops, Legal, HR" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="testResults">Results & Findings</label>
+                        <textarea id="testResults" rows="4" class="form-input" placeholder="Document outcomes, issues identified, response times achieved..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="testLessons">Lessons Learned / Action Items</label>
+                        <textarea id="testLessons" rows="3" class="form-input" placeholder="What went well, what needs improvement, follow-up actions..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.recordBCTest()">📝 Record Test</button>
+                </div>
+                <div id="bcTestResult" style="display:none; margin-top:16px; padding:12px; background:#d4edda; border-radius:6px; border-left:4px solid #27ae60;"></div>
+                <div id="bcTestHistory" style="margin-top:20px;"></div>
+            </div>
+        </section>
+
+        <!-- Documents Page -->
+        <section id="documents-page" class="page">
+            <header class="page-header">
+                <h2>Document Upload & Analysis</h2>
+                <p>Upload organizational documents for framework analysis and gap identification</p>
+            </header>
+
+            <div class="doc-tabs" style="display:flex; gap:8px; margin-bottom:20px;">
+                <button class="tab-btn active" onclick="switchDocTab('upload')">Upload Document</button>
+                <button class="tab-btn" onclick="switchDocTab('list')">Document Library</button>
+                <button class="tab-btn" onclick="switchDocTab('gap')">Gap Analysis</button>
+            </div>
+
+            <!-- Upload Tab -->
+            <div id="doc-tab-upload" class="doc-tab-content">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <div class="form-group">
+                        <label for="docOrganization">Organization</label>
+                        <input type="text" id="docOrganization" placeholder="Enter organization name" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="docTitle">Document Title</label>
+                        <input type="text" id="docTitle" placeholder="e.g., Access Control Policy v2.1" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="docType">Document Type (auto-detected if not specified)</label>
+                        <select id="docType" class="form-input">
+                            <option value="">Auto-detect</option>
+                            <option value="policy">Policy</option>
+                            <option value="procedure">Procedure</option>
+                            <option value="ssp">System Security Plan (SSP)</option>
+                            <option value="irp">Incident Response Plan</option>
+                            <option value="security-plan">Security Plan</option>
+                            <option value="system-plan">System Plan</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="docTags">Tags (comma-separated)</label>
+                        <input type="text" id="docTags" placeholder="e.g., access-control, encryption, incident-response" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label>Document Content</label>
+                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                            <button class="tab-btn active" onclick="switchUploadMode('paste')" id="btn-paste-mode">Paste Text</button>
+                            <button class="tab-btn" onclick="switchUploadMode('file')" id="btn-file-mode">Upload File</button>
+                        </div>
+                        <div id="paste-mode">
+                            <textarea id="docContent" rows="12" placeholder="Paste your document content here..." class="form-input" style="font-family:monospace; font-size:13px;"></textarea>
+                        </div>
+                        <div id="file-mode" style="display:none;">
+                            <input type="file" id="docFile" accept=".txt,.md,.doc,.docx,.pdf,.json,.csv" class="form-input" onchange="handleFileUpload(event)" />
+                            <p style="font-size:12px; color:#666; margin-top:4px;">Supports .txt, .md, .json, .csv files (content extracted as text)</p>
+                            <textarea id="docFileContent" rows="8" class="form-input" style="margin-top:8px; font-family:monospace; font-size:13px;" placeholder="File content will appear here after upload..." readonly></textarea>
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="app.uploadDocument()" style="margin-top:12px;">
+                        📤 Upload & Analyze Document
+                    </button>
+                </div>
+
+                <!-- Upload Result -->
+                <div id="uploadResult" style="display:none; margin-top:20px; padding:16px; background:var(--light-gray); border-radius:8px; border-left:4px solid var(--primary-color);">
+                    <h3 style="margin-bottom:12px;">✅ Document Ingested Successfully</h3>
+                    <div id="uploadResultContent"></div>
+                </div>
+            </div>
+
+            <!-- Document Library Tab -->
+            <div id="doc-tab-list" class="doc-tab-content" style="display:none;">
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:center;">
+                    <input type="text" id="docSearchFilter" placeholder="Filter by title or organization..." class="form-input" style="flex:1;" oninput="app.filterDocuments()" />
+                    <button class="btn-primary" onclick="app.loadDocuments()">🔄 Refresh</button>
+                </div>
+                <div id="documentsList" class="documents-grid">
+                    <p style="color:#666; text-align:center; padding:40px;">Click "Refresh" to load documents, or upload your first document.</p>
+                </div>
+            </div>
+
+            <!-- Gap Analysis Tab -->
+            <div id="doc-tab-gap" class="doc-tab-content" style="display:none;">
+                <div class="form-container" style="background:var(--light-gray); padding:20px; border-radius:8px;">
+                    <h3>Run Gap Analysis</h3>
+                    <p style="margin-bottom:16px; color:#666;">Analyze an uploaded document against a compliance framework to identify gaps.</p>
+                    <div class="form-group">
+                        <label for="gapDocSelect">Select Document</label>
+                        <select id="gapDocSelect" class="form-input">
+                            <option value="">-- Load documents first --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="gapFrameworkSelect">Target Framework</label>
+                        <select id="gapFrameworkSelect" class="form-input">
+                            <optgroup label="NIST">
+                                <option value="nist-csf">NIST CSF 2.0</option>
+                                <option value="nist-800-53">NIST SP 800-53</option>
+                                <option value="nist-800-171">NIST SP 800-171</option>
+                                <option value="cmmc">CMMC 2.0</option>
+                                <option value="nist-ai-rmf">NIST AI RMF</option>
+                            </optgroup>
+                            <optgroup label="Industry Standards">
+                                <option value="cis-controls">CIS Controls v8</option>
+                                <option value="hitrust">HITRUST CSF</option>
+                                <option value="iso-27001">ISO/IEC 27001</option>
+                                <option value="iso-27701">ISO/IEC 27701</option>
+                                <option value="soc2">SOC 2</option>
+                                <option value="pci-dss">PCI DSS 4.0</option>
+                            </optgroup>
+                            <optgroup label="Federal">
+                                <option value="hipaa">HIPAA</option>
+                                <option value="fedramp">FedRAMP</option>
+                                <option value="fisma">FISMA</option>
+                                <option value="cjis">CJIS</option>
+                                <option value="ferpa">FERPA</option>
+                                <option value="coppa">COPPA</option>
+                                <option value="sox">SOX</option>
+                                <option value="glba">GLBA</option>
+                            </optgroup>
+                            <optgroup label="Privacy Laws">
+                                <option value="gdpr">GDPR</option>
+                                <option value="ccpa">CCPA</option>
+                                <option value="cpra">CPRA</option>
+                                <option value="vcdpa">VCDPA</option>
+                                <option value="cpa-co">CPA (Colorado)</option>
+                                <option value="ctdpa">CTDPA</option>
+                                <option value="texas-hb4">Texas HB4 / TDPSA</option>
+                                <option value="nydfs">NYDFS 23 NYCRR 500</option>
+                                <option value="shield-act">NY SHIELD Act</option>
+                                <option value="cmia">CMIA</option>
+                            </optgroup>
+                            <optgroup label="AI Governance">
+                                <option value="eu-ai-act">EU AI Act</option>
+                                <option value="eo-14110">EO 14110</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="app.runGapAnalysis()">🔍 Run Gap Analysis</button>
+                </div>
+                <div id="gapAnalysisResult" style="display:none; margin-top:20px;"></div>
             </div>
         </section>
 
@@ -247,36 +1494,84 @@
 
     <!-- Help Modal -->
     <div id="helpModal" class="modal" style="display: none;">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width:800px; max-height:85vh; overflow-y:auto;">
             <span class="modal-close" onclick="toggleElement('helpModal')">&times;</span>
-            <h2>Help & Documentation</h2>
+            <h2>GRC Agent — Help & Documentation</h2>
             <div class="help-content">
-                <h3>Features</h3>
+
+                <h3>📋 Workflow Overview</h3>
+                <p style="margin-bottom:12px;">The GRC Agent supports the full compliance lifecycle: ingest existing documents → analyze gaps → generate policies/plans → track implementation → cross-compare frameworks.</p>
+
+                <h3>💬 Chat</h3>
                 <ul>
-                    <li><strong>Chat:</strong> Interact with AI to generate policies, plans, and analysis</li>
-                    <li><strong>Policies:</strong> Create and manage compliance policies</li>
-                    <li><strong>Plans:</strong> Generate security and compliance plans</li>
-                    <li><strong>Frameworks:</strong> Browse compliance standards and requirements</li>
-                    <li><strong>Analytics:</strong> Track your work and activity</li>
+                    <li>Natural language interface for quick questions and generation</li>
+                    <li>Ask: "Generate an access control policy for NIST 800-53"</li>
+                    <li>Ask: "What controls does HIPAA require for encryption?"</li>
+                    <li>Ask: "Compare HITRUST to CIS Controls for incident response"</li>
                 </ul>
-                <h3>Supported Frameworks</h3>
+
+                <h3>📄 Document Upload & Analysis</h3>
                 <ul>
-                    <li>NIST CSF 2.0</li>
-                    <li>NIST SP 800-53</li>
-                    <li>NIST CMMC 2.0</li>
-                    <li>HIPAA</li>
-                    <li>HITRUST</li>
-                    <li>SOX</li>
-                    <li>SOC 2</li>
-                    <li>GDPR</li>
-                    <li>CCPA</li>
+                    <li><strong>Upload documents</strong> — Paste or upload existing policies, procedures, plans, or SSPs for ingestion</li>
+                    <li><strong>Auto-classification</strong> — Documents are automatically classified as policy, procedure, SSP, IRP, security-plan, or system-plan</li>
+                    <li><strong>Framework detection</strong> — Referenced frameworks are automatically identified from content</li>
+                    <li><strong>Control extraction</strong> — Control IDs (e.g., AC-2, CIS.5, 164.312) are automatically extracted</li>
+                    <li><strong>Gap analysis</strong> — Analyze any uploaded document against a target framework to identify coverage gaps</li>
+                    <li>Available from the <strong>Policies</strong>, <strong>Plans</strong>, and <strong>Frameworks</strong> pages</li>
                 </ul>
-                <h3>Tips</h3>
+
+                <h3>📋 Policies</h3>
                 <ul>
-                    <li>Use the chat interface for quick, conversational access</li>
-                    <li>Export policies and plans for offline review</li>
-                    <li>Compare multiple frameworks for alignment</li>
-                    <li>Review analytics to track compliance efforts</li>
+                    <li><strong>Generate</strong> — Create new policies aligned to selected frameworks</li>
+                    <li><strong>Upload & Analyze</strong> — Upload existing policies for gap analysis against any framework</li>
+                    <li><strong>Export</strong> — Download policies as Markdown for offline use</li>
+                </ul>
+
+                <h3>📊 Plans</h3>
+                <ul>
+                    <li><strong>Plan Types:</strong> SSP, Incident Response, Breach Response, BC/DR, Test & Failover</li>
+                    <li><strong>Upload & Analyze</strong> — Upload existing plans for completeness review</li>
+                    <li><strong>Generate</strong> — Create new plans from templates aligned to frameworks</li>
+                </ul>
+
+                <h3>🔗 Frameworks</h3>
+                <ul>
+                    <li><strong>Browse</strong> — View all 31 frameworks with their controls, categories, and details</li>
+                    <li><strong>Cross-Compare</strong> — Select 2-3 frameworks and compare controls across 23 security domains</li>
+                    <li><strong>Compliance Posture</strong> — Ingest your org's control statuses, then cross-map coverage to other frameworks</li>
+                    <li><strong>Search</strong> — Find controls by keyword across all frameworks</li>
+                </ul>
+
+                <h3>🔗 Supported Frameworks (31)</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; font-size:12px; margin:8px 0 16px;">
+                    <div><strong>NIST:</strong> CSF 2.0, 800-53, 800-171, CMMC, AI RMF</div>
+                    <div><strong>Industry:</strong> CIS v8, HITRUST, ISO 27001/27701, SOC 2, PCI DSS</div>
+                    <div><strong>Federal:</strong> HIPAA, FedRAMP, FISMA, CJIS, FERPA, COPPA, SOX, GLBA</div>
+                    <div><strong>Privacy:</strong> GDPR, CCPA, CPRA, VCDPA, CPA, CTDPA, TDPSA, NYDFS, SHIELD, CMIA</div>
+                    <div><strong>AI:</strong> EU AI Act, EO 14110</div>
+                </div>
+
+                <h3>📈 Controls & Procedures</h3>
+                <ul>
+                    <li>Track control implementation status per organization</li>
+                    <li>Create operational procedures linked to controls</li>
+                    <li>Record evidence and implementation notes</li>
+                </ul>
+
+                <h3>⚙️ Additional Features</h3>
+                <ul>
+                    <li><strong>Exemption Tracking</strong> — Record risk-acceptance decisions with owner, review date, and residual risk</li>
+                    <li><strong>Continuous Improvement</strong> — Capture lessons learned and improvement insights</li>
+                    <li><strong>Offline Package</strong> — Export full framework data for offline access</li>
+                    <li><strong>MCP Server</strong> — Expose all tools to AI assistants (Claude, Copilot) via Model Context Protocol</li>
+                </ul>
+
+                <h3>💡 Tips</h3>
+                <ul>
+                    <li>Upload existing documentation first — the tool will auto-detect frameworks and controls</li>
+                    <li>Use Cross-Compare to identify where one framework's compliance transfers to another</li>
+                    <li>Ingest compliance posture before cross-mapping to see coverage gaps in target frameworks</li>
+                    <li>Export policies and plans as Markdown for stakeholder review</li>
                 </ul>
             </div>
         </div>

@@ -15,17 +15,72 @@ import {
   ControlEffectiveness
 } from '../types/framework.js';
 import { v4 as uuidv4 } from 'uuid';
+import { localStoreService } from './local-store-service.js';
+import ImprovementPlaybookService from './improvement-playbook-service.js';
 
 export class ControlImplementationService {
   private controls: Map<string, ImplementedControl> = new Map();
   private procedures: Map<string, ImplementedProcedure> = new Map();
+  private improvementPlaybookService: ImprovementPlaybookService;
   
   // Index for quick lookup by framework control ID
   private controlsByFramework: Map<string, Set<string>> = new Map();
 
   constructor() {
-    // Initialize with some sample data for demonstration
+    this.improvementPlaybookService = new ImprovementPlaybookService();
+    const persistedControls = localStoreService.getControls();
+    const persistedProcedures = localStoreService.getProcedures();
+
+    if (persistedControls.length > 0 || persistedProcedures.length > 0) {
+      this.loadFromStore(persistedControls, persistedProcedures);
+      return;
+    }
+
+    // Initialize with sample data only when no local data exists.
     this.initializeSampleData();
+    this.persistAll();
+  }
+
+  private loadFromStore(
+    controls: ImplementedControl[],
+    procedures: ImplementedProcedure[]
+  ): void {
+    this.controls.clear();
+    this.procedures.clear();
+    this.controlsByFramework.clear();
+
+    controls.forEach(control => {
+      this.controls.set(control.id, {
+        ...control,
+        procedures: []
+      });
+    });
+
+    const effectiveProcedures = procedures.length > 0
+      ? procedures
+      : controls.flatMap(control => control.procedures || []);
+
+    effectiveProcedures.forEach(procedure => {
+      this.procedures.set(procedure.id, procedure);
+      const control = this.controls.get(procedure.controlId);
+      if (control) {
+        control.procedures.push(procedure);
+      }
+    });
+
+    this.rebuildFrameworkIndex();
+  }
+
+  private rebuildFrameworkIndex(): void {
+    this.controlsByFramework.clear();
+
+    this.controls.forEach(control => {
+      const key = `${control.framework}:${control.frameworkControlId}`;
+      if (!this.controlsByFramework.has(key)) {
+        this.controlsByFramework.set(key, new Set());
+      }
+      this.controlsByFramework.get(key)!.add(control.id);
+    });
   }
 
   private initializeSampleData(): void {
@@ -120,6 +175,8 @@ export class ControlImplementationService {
     }
     this.controlsByFramework.get(key)!.add(control.id);
 
+    this.persistAll();
+
     return control;
   }
 
@@ -163,6 +220,7 @@ export class ControlImplementationService {
     };
 
     this.controls.set(controlId, updatedControl);
+    this.persistAll();
     return updatedControl;
   }
 
@@ -179,7 +237,12 @@ export class ControlImplementationService {
       this.procedures.delete(proc.id);
     });
 
-    return this.controls.delete(controlId);
+    const deleted = this.controls.delete(controlId);
+    if (deleted) {
+      this.persistAll();
+    }
+
+    return deleted;
   }
 
   // ==================== PROCEDURE OPERATIONS ====================
@@ -188,11 +251,20 @@ export class ControlImplementationService {
     const control = this.controls.get(request.controlId);
     if (!control) return undefined;
 
+    const injection = this.improvementPlaybookService.buildInjectionBrief({
+      frameworks: [control.framework],
+      limit: 2
+    });
+
+    const guidanceBlock = injection.guidance
+      ? `\n\nContinuous Improvement Guidance\n${injection.guidance}`
+      : '';
+
     const procedure: ImplementedProcedure = {
       id: uuidv4(),
       controlId: request.controlId,
       procedureName: request.procedureName,
-      procedureDescription: request.procedureDescription,
+      procedureDescription: `${request.procedureDescription}${guidanceBlock}`,
       procedureOwner: request.procedureOwner,
       documentLink: request.documentLink,
       version: request.version || '1.0',
@@ -206,6 +278,20 @@ export class ControlImplementationService {
     this.procedures.set(procedure.id, procedure);
     control.procedures.push(procedure);
     control.updatedAt = new Date();
+
+    this.persistAll();
+
+    if (injection.insightIds.length > 0) {
+      this.improvementPlaybookService.recordInjectionOutcome({
+        artifactType: 'procedure',
+        artifactId: procedure.id,
+        artifactTitle: procedure.procedureName,
+        organization: control.organization,
+        frameworks: [control.framework],
+        injectedInsightIds: injection.insightIds,
+        injectionSummary: injection.guidance
+      });
+    }
 
     return procedure;
   }
@@ -240,6 +326,8 @@ export class ControlImplementationService {
       }
     }
 
+    this.persistAll();
+
     return updatedProcedure;
   }
 
@@ -253,7 +341,12 @@ export class ControlImplementationService {
       control.procedures = control.procedures.filter(p => p.id !== procedureId);
     }
 
-    return this.procedures.delete(procedureId);
+    const deleted = this.procedures.delete(procedureId);
+    if (deleted) {
+      this.persistAll();
+    }
+
+    return deleted;
   }
 
   // ==================== SUMMARY AND REPORTING ====================
@@ -399,6 +492,11 @@ export class ControlImplementationService {
       procedure.procedureDescription.toLowerCase().includes(lowerQuery) ||
       procedure.procedureOwner.toLowerCase().includes(lowerQuery)
     );
+  }
+
+  private persistAll(): void {
+    localStoreService.setControls(Array.from(this.controls.values()));
+    localStoreService.setProcedures(Array.from(this.procedures.values()));
   }
 }
 

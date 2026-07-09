@@ -1,6 +1,6 @@
 /**
  * Risk Assessment Service
- * Comprehensive risk assessment, scoring, and management functionality
+ * In-memory risk register, scoring, treatment planning, and reporting.
  */
 
 import {
@@ -15,35 +15,39 @@ import {
   QuantitativeRiskAssessment,
   RiskRegister,
   RiskAppetite,
-  RiskHeatmapData
+  RiskHeatmapCell,
+  RiskHeatmapData,
+  TreatmentAction
 } from '../types/framework.js';
 
 export class RiskAssessmentService {
   private risks: Map<string, RiskAssessment> = new Map();
   private riskRegister: RiskRegister | null = null;
 
-  /**
-   * Initialize a new risk register
-   */
   initializeRiskRegister(
     organizationName: string,
     riskAppetite: RiskAppetite
   ): RiskRegister {
-    this.riskRegister = {
+    const now = new Date();
+
+    const register: RiskRegister = {
       id: this.generateId('REG'),
-      organizationName,
-      createdDate: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-      version: '1.0',
-      risks: [],
-      riskAppetite
+      name: `${organizationName} Risk Register`,
+      organization: organizationName,
+      description: 'Central risk register for governance, risk, and compliance operations.',
+      risks: this.getAllRisks(),
+      riskAppetite,
+      createdAt: now,
+      updatedAt: now,
+      owner: 'Risk Management',
+      reviewFrequency: 'quarterly',
+      nextReviewDate: this.calculateNextReviewDate(9)
     };
-    return this.riskRegister;
+
+    this.riskRegister = register;
+    return register;
   }
 
-  /**
-   * Create a new risk assessment
-   */
   createRisk(params: {
     name: string;
     description: string;
@@ -58,86 +62,84 @@ export class RiskAssessmentService {
     owner?: string;
     notes?: string;
   }): RiskAssessment {
-    const id = this.generateId('RISK');
-    
+    const now = new Date();
     const inherentRiskScore = this.calculateRiskScore(params.likelihood, params.impact);
-    
+    const inherentRiskRating = this.getRiskRating(inherentRiskScore);
+    const existingControls = params.existingControls || [];
+
     const risk: RiskAssessment = {
-      id,
-      name: params.name,
-      description: params.description,
-      category: params.category,
-      assetId: params.assetId,
-      assetName: params.assetName,
-      threatSource: params.threatSource,
-      vulnerabilities: params.vulnerabilities || [],
-      likelihood: params.likelihood,
-      impact: params.impact,
+      id: this.generateId('RISK'),
+      title: params.name,
+      description: this.composeDescription(params.description, params.assetName, params.threatSource, params.notes),
+      organization: 'Unspecified Organization',
+      category: this.normalizeCategory(params.category),
+      owner: params.owner || 'Unassigned',
+      inherentLikelihood: params.likelihood,
+      inherentImpact: params.impact,
       inherentRiskScore,
-      existingControls: params.existingControls || [],
+      inherentRiskRating,
+      existingControls,
+      controlEffectiveness: this.getOverallControlEffectiveness(existingControls),
       residualLikelihood: params.likelihood,
       residualImpact: params.impact,
       residualRiskScore: inherentRiskScore,
+      residualRiskRating: inherentRiskRating,
       treatment: RiskTreatment.ACCEPT,
       status: RiskStatus.IDENTIFIED,
-      owner: params.owner || 'Unassigned',
-      createdDate: new Date().toISOString(),
-      lastReviewDate: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
+      assessmentDate: now,
       nextReviewDate: this.calculateNextReviewDate(inherentRiskScore),
-      notes: params.notes
+      tags: this.buildTags(params),
+      relatedControls: existingControls.map(control => control.id)
     };
 
-    this.risks.set(id, risk);
-    
+    this.risks.set(risk.id, risk);
+
     if (this.riskRegister) {
-      this.riskRegister.risks.push(risk);
-      this.riskRegister.lastUpdated = new Date().toISOString();
+      this.riskRegister.risks = this.getAllRisks();
+      this.riskRegister.updatedAt = new Date();
     }
 
     return risk;
   }
 
-  /**
-   * Calculate qualitative risk score (likelihood × impact)
-   */
   calculateRiskScore(likelihood: RiskLikelihood, impact: RiskImpact): number {
     return likelihood * impact;
   }
 
-  /**
-   * Get risk level description based on score
-   */
   getRiskLevel(score: number): { level: string; color: string; description: string } {
     if (score <= 4) {
-      return { 
-        level: 'Low', 
+      return {
+        level: 'Low',
         color: 'green',
-        description: 'Risk is acceptable with normal monitoring'
-      };
-    } else if (score <= 9) {
-      return { 
-        level: 'Medium', 
-        color: 'yellow',
-        description: 'Risk requires attention and mitigation planning'
-      };
-    } else if (score <= 16) {
-      return { 
-        level: 'High', 
-        color: 'orange',
-        description: 'Risk requires prompt action and management attention'
-      };
-    } else {
-      return { 
-        level: 'Critical', 
-        color: 'red',
-        description: 'Risk requires immediate action and executive attention'
+        description: 'Risk is typically acceptable with normal monitoring.'
       };
     }
+
+    if (score <= 9) {
+      return {
+        level: 'Medium',
+        color: 'yellow',
+        description: 'Risk requires mitigation planning and scheduled follow-up.'
+      };
+    }
+
+    if (score <= 16) {
+      return {
+        level: 'High',
+        color: 'orange',
+        description: 'Risk needs near-term treatment and leadership visibility.'
+      };
+    }
+
+    return {
+      level: 'Critical',
+      color: 'red',
+      description: 'Risk requires immediate action and executive review.'
+    };
   }
 
-  /**
-   * Calculate quantitative risk using SLE/ALE methodology
-   */
   calculateQuantitativeRisk(params: {
     riskId: string;
     assetValue: number;
@@ -146,76 +148,66 @@ export class RiskAssessmentService {
     controlCost?: number;
     controlEffectiveness?: number;
   }): QuantitativeRiskAssessment {
-    // Single Loss Expectancy = Asset Value × Exposure Factor
     const singleLossExpectancy = params.assetValue * params.exposureFactor;
-    
-    // Annual Loss Expectancy = SLE × ARO
-    const annualLossExpectancy = singleLossExpectancy * params.annualRateOfOccurrence;
-    
+    const annualizedLossExpectancy = singleLossExpectancy * params.annualRateOfOccurrence;
+
     let returnOnInvestment: number | undefined;
-    
-    if (params.controlCost && params.controlEffectiveness) {
-      // New ALE after control = ALE × (1 - Control Effectiveness)
-      const newALE = annualLossExpectancy * (1 - params.controlEffectiveness);
-      // Risk Reduction = Original ALE - New ALE
-      const riskReduction = annualLossExpectancy - newALE;
-      // ROI = (Risk Reduction - Control Cost) / Control Cost
+
+    if (params.controlCost && params.controlCost > 0 && params.controlEffectiveness !== undefined) {
+      const aleAfterControl = annualizedLossExpectancy * (1 - params.controlEffectiveness);
+      const riskReduction = annualizedLossExpectancy - aleAfterControl;
       returnOnInvestment = (riskReduction - params.controlCost) / params.controlCost;
     }
 
-    const quantAssessment: QuantitativeRiskAssessment = {
-      riskId: params.riskId,
+    const result: QuantitativeRiskAssessment = {
       assetValue: params.assetValue,
       exposureFactor: params.exposureFactor,
       singleLossExpectancy,
       annualRateOfOccurrence: params.annualRateOfOccurrence,
-      annualLossExpectancy,
-      returnOnInvestment
+      annualizedLossExpectancy,
+      controlCost: params.controlCost,
+      controlEffectiveness: params.controlEffectiveness,
+      returnOnInvestment,
+      currency: 'USD',
+      calculatedAt: new Date()
     };
 
-    // Update the risk with quantitative data if it exists
     const risk = this.risks.get(params.riskId);
     if (risk) {
-      risk.quantitativeAssessment = quantAssessment;
+      risk.quantitativeAssessment = result;
+      risk.updatedAt = new Date();
+      this.risks.set(risk.id, risk);
     }
 
-    return quantAssessment;
+    return result;
   }
 
-  /**
-   * Apply controls and recalculate residual risk
-   */
   applyControls(
-    riskId: string, 
+    riskId: string,
     controls: RiskControl[]
   ): RiskAssessment | undefined {
     const risk = this.risks.get(riskId);
-    if (!risk) return undefined;
+    if (!risk) {
+      return undefined;
+    }
 
-    // Add controls
     risk.existingControls = [...risk.existingControls, ...controls];
 
-    // Calculate control effectiveness
-    const totalEffectiveness = controls.reduce((sum, ctrl) => {
-      return sum + (ctrl.effectiveness || 0);
-    }, 0) / controls.length || 0;
+    const averageEffectiveness = this.calculateControlEffectivenessScore(controls);
+    const likelihoodReduction = averageEffectiveness >= 0.75 ? 2 : averageEffectiveness >= 0.45 ? 1 : 0;
+    const impactReduction = averageEffectiveness >= 0.75 ? 1 : 0;
 
-    // Reduce risk based on control effectiveness
-    // Effectiveness of 0.2 (20%) reduces likelihood/impact by ~1 level each
-    const reductionFactor = Math.floor(totalEffectiveness * 5);
-    
-    risk.residualLikelihood = Math.max(1, risk.likelihood - reductionFactor) as RiskLikelihood;
-    risk.residualImpact = Math.max(1, risk.impact - Math.floor(reductionFactor / 2)) as RiskImpact;
+    risk.residualLikelihood = Math.max(1, risk.residualLikelihood - likelihoodReduction) as RiskLikelihood;
+    risk.residualImpact = Math.max(1, risk.residualImpact - impactReduction) as RiskImpact;
     risk.residualRiskScore = this.calculateRiskScore(risk.residualLikelihood, risk.residualImpact);
+    risk.residualRiskRating = this.getRiskRating(risk.residualRiskScore);
+    risk.controlEffectiveness = this.getOverallControlEffectiveness(risk.existingControls);
+    risk.updatedAt = new Date();
 
-    risk.lastReviewDate = new Date().toISOString();
-    
+    this.risks.set(risk.id, risk);
     return risk;
   }
 
-  /**
-   * Create a treatment plan for a risk
-   */
   createTreatmentPlan(params: {
     riskId: string;
     treatment: RiskTreatment;
@@ -226,374 +218,448 @@ export class RiskAssessmentService {
     budget?: number;
   }): RiskTreatmentPlan | undefined {
     const risk = this.risks.get(params.riskId);
-    if (!risk) return undefined;
+    if (!risk) {
+      return undefined;
+    }
+
+    const action: TreatmentAction = {
+      id: this.generateId('ACT'),
+      description: params.description,
+      owner: params.responsibleParty,
+      dueDate: new Date(params.targetDate),
+      status: 'not-started',
+      estimatedCost: params.budget
+    };
 
     const plan: RiskTreatmentPlan = {
-      riskId: params.riskId,
-      treatment: params.treatment,
-      description: params.description,
-      proposedControls: params.proposedControls || [],
-      responsibleParty: params.responsibleParty,
-      targetDate: params.targetDate,
-      status: 'Planned',
-      budget: params.budget
+      id: this.generateId('TPL'),
+      actions: [action],
+      totalBudget: params.budget,
+      startDate: new Date(),
+      targetCompletionDate: new Date(params.targetDate),
+      status: 'not-started'
     };
 
     risk.treatment = params.treatment;
     risk.treatmentPlan = plan;
-    risk.status = RiskStatus.MITIGATING;
+    risk.status = RiskStatus.TREATMENT_PLANNED;
+
+    if (params.treatment === RiskTreatment.MITIGATE) {
+      risk.targetLikelihood = Math.max(1, risk.residualLikelihood - 1) as RiskLikelihood;
+      risk.targetImpact = Math.max(1, risk.residualImpact - 1) as RiskImpact;
+      risk.targetRiskScore = this.calculateRiskScore(risk.targetLikelihood, risk.targetImpact);
+      risk.targetRiskRating = this.getRiskRating(risk.targetRiskScore);
+    }
+
+    risk.updatedAt = new Date();
+    this.risks.set(risk.id, risk);
 
     return plan;
   }
 
-  /**
-   * Update risk status
-   */
   updateRiskStatus(riskId: string, status: RiskStatus): RiskAssessment | undefined {
     const risk = this.risks.get(riskId);
-    if (!risk) return undefined;
-
-    risk.status = status;
-    risk.lastReviewDate = new Date().toISOString();
-
-    if (status === RiskStatus.MITIGATED) {
-      risk.nextReviewDate = this.calculateNextReviewDate(risk.residualRiskScore, true);
+    if (!risk) {
+      return undefined;
     }
 
+    risk.status = status;
+    risk.updatedAt = new Date();
+
+    if (status === RiskStatus.CLOSED || status === RiskStatus.ACCEPTED) {
+      risk.nextReviewDate = this.calculateNextReviewDate(4, true);
+    }
+
+    this.risks.set(risk.id, risk);
     return risk;
   }
 
-  /**
-   * Generate risk heatmap data
-   */
   generateHeatmap(): RiskHeatmapData {
-    const cells: Array<{
-      likelihood: RiskLikelihood;
-      impact: RiskImpact;
-      riskIds: string[];
-      count: number;
-      color: string;
-    }> = [];
+    const cells: RiskHeatmapCell[] = [];
 
-    // Create 5x5 matrix
-    for (let l = 1; l <= 5; l++) {
-      for (let i = 1; i <= 5; i++) {
-        const likelihood = l as RiskLikelihood;
-        const impact = i as RiskImpact;
-        const score = this.calculateRiskScore(likelihood, impact);
-        const { color } = this.getRiskLevel(score);
-        
-        const matchingRisks = Array.from(this.risks.values()).filter(
-          r => r.likelihood === likelihood && r.impact === impact
+    for (let likelihood = 1; likelihood <= 5; likelihood += 1) {
+      for (let impact = 1; impact <= 5; impact += 1) {
+        const l = likelihood as RiskLikelihood;
+        const i = impact as RiskImpact;
+
+        const matching = this.getAllRisks().filter(
+          risk => risk.inherentLikelihood === l && risk.inherentImpact === i
         );
 
+        const score = this.calculateRiskScore(l, i);
+        const level = this.getRiskLevel(score);
+
         cells.push({
-          likelihood,
-          impact,
-          riskIds: matchingRisks.map(r => r.id),
-          count: matchingRisks.length,
-          color
+          likelihood: l,
+          impact: i,
+          count: matching.length,
+          color: level.color,
+          risks: matching.map(risk => ({
+            id: risk.id,
+            title: risk.title,
+            score: risk.inherentRiskScore
+          })),
+          riskIds: matching.map(risk => risk.id)
         });
       }
     }
 
-    // Count by category
-    const categoryBreakdown = Object.values(RiskCategory).reduce((acc, cat) => {
-      acc[cat] = Array.from(this.risks.values()).filter(r => r.category === cat).length;
+    const risks = this.getAllRisks();
+    const categoryBreakdown = Object.values(RiskCategory).reduce<Record<string, number>>((acc, category) => {
+      acc[category] = risks.filter(risk => risk.category === category).length;
       return acc;
-    }, {} as Record<RiskCategory, number>);
+    }, {});
 
-    // Count by status
-    const statusBreakdown = Object.values(RiskStatus).reduce((acc, status) => {
-      acc[status] = Array.from(this.risks.values()).filter(r => r.status === status).length;
+    const statusBreakdown = Object.values(RiskStatus).reduce<Record<string, number>>((acc, status) => {
+      acc[status] = risks.filter(risk => risk.status === status).length;
       return acc;
-    }, {} as Record<RiskStatus, number>);
+    }, {});
 
     return {
       cells,
-      totalRisks: this.risks.size,
-      criticalCount: Array.from(this.risks.values()).filter(r => r.inherentRiskScore >= 20).length,
-      highCount: Array.from(this.risks.values()).filter(r => r.inherentRiskScore >= 12 && r.inherentRiskScore < 20).length,
-      mediumCount: Array.from(this.risks.values()).filter(r => r.inherentRiskScore >= 5 && r.inherentRiskScore < 12).length,
-      lowCount: Array.from(this.risks.values()).filter(r => r.inherentRiskScore < 5).length,
+      totalRisks: risks.length,
+      criticalCount: risks.filter(risk => risk.inherentRiskScore >= 20).length,
+      highCount: risks.filter(risk => risk.inherentRiskScore >= 12 && risk.inherentRiskScore < 20).length,
+      mediumCount: risks.filter(risk => risk.inherentRiskScore >= 5 && risk.inherentRiskScore < 12).length,
+      lowCount: risks.filter(risk => risk.inherentRiskScore < 5).length,
       categoryBreakdown,
       statusBreakdown
     };
   }
 
-  /**
-   * Get risk by ID
-   */
   getRisk(id: string): RiskAssessment | undefined {
     return this.risks.get(id);
   }
 
-  /**
-   * Get all risks
-   */
   getAllRisks(): RiskAssessment[] {
     return Array.from(this.risks.values());
   }
 
-  /**
-   * Get risks by category
-   */
   getRisksByCategory(category: RiskCategory): RiskAssessment[] {
-    return Array.from(this.risks.values()).filter(r => r.category === category);
+    return this.getAllRisks().filter(risk => risk.category === this.normalizeCategory(category));
   }
 
-  /**
-   * Get risks by status
-   */
   getRisksByStatus(status: RiskStatus): RiskAssessment[] {
-    return Array.from(this.risks.values()).filter(r => r.status === status);
+    return this.getAllRisks().filter(risk => risk.status === status);
   }
 
-  /**
-   * Get high and critical risks that need attention
-   */
   getRisksNeedingAttention(): RiskAssessment[] {
-    return Array.from(this.risks.values()).filter(r => 
-      (r.inherentRiskScore >= 12 && r.status !== RiskStatus.MITIGATED && r.status !== RiskStatus.CLOSED) ||
-      new Date(r.nextReviewDate) <= new Date()
-    ).sort((a, b) => b.inherentRiskScore - a.inherentRiskScore);
+    const now = new Date();
+
+    return this.getAllRisks()
+      .filter(risk => {
+        const unresolved = risk.status !== RiskStatus.CLOSED && risk.status !== RiskStatus.ACCEPTED;
+        const highRisk = risk.inherentRiskScore >= 12;
+        const overdue = risk.nextReviewDate <= now;
+        return (unresolved && highRisk) || overdue;
+      })
+      .sort((a, b) => b.inherentRiskScore - a.inherentRiskScore);
   }
 
-  /**
-   * Get the current risk register
-   */
   getRiskRegister(): RiskRegister | null {
     if (this.riskRegister) {
-      this.riskRegister.risks = Array.from(this.risks.values());
+      this.riskRegister.risks = this.getAllRisks();
+      this.riskRegister.updatedAt = new Date();
     }
+
     return this.riskRegister;
   }
 
-  /**
-   * Generate risk register report
-   */
   generateRiskReport(): string {
-    const risks = Array.from(this.risks.values());
+    const risks = this.getAllRisks();
     const heatmap = this.generateHeatmap();
 
-    let report = `# Risk Assessment Report\n\n`;
+    let report = '# Risk Assessment Report\n\n';
     report += `**Generated:** ${new Date().toISOString()}\n`;
     report += `**Total Risks:** ${risks.length}\n\n`;
 
-    report += `## Risk Summary\n\n`;
-    report += `| Level | Count |\n|-------|-------|\n`;
+    report += '## Risk Summary\n\n';
+    report += '| Level | Count |\n|-------|-------|\n';
     report += `| Critical | ${heatmap.criticalCount} |\n`;
     report += `| High | ${heatmap.highCount} |\n`;
     report += `| Medium | ${heatmap.mediumCount} |\n`;
     report += `| Low | ${heatmap.lowCount} |\n\n`;
 
-    report += `## Category Breakdown\n\n`;
-    Object.entries(heatmap.categoryBreakdown).forEach(([cat, count]) => {
-      if (count > 0) {
-        report += `- **${cat}:** ${count}\n`;
-      }
+    report += '## Detailed Risks\n\n';
+    risks.forEach(risk => {
+      const level = this.getRiskLevel(risk.inherentRiskScore);
+      report += `### ${risk.id}: ${risk.title}\n`;
+      report += `- Category: ${risk.category}\n`;
+      report += `- Status: ${risk.status}\n`;
+      report += `- Inherent Risk: ${risk.inherentRiskScore} (${level.level})\n`;
+      report += `- Residual Risk: ${risk.residualRiskScore}\n`;
+      report += `- Owner: ${risk.owner}\n`;
+      report += `- Next Review: ${risk.nextReviewDate.toISOString()}\n\n`;
     });
-
-    report += `\n## Status Breakdown\n\n`;
-    Object.entries(heatmap.statusBreakdown).forEach(([status, count]) => {
-      if (count > 0) {
-        report += `- **${status}:** ${count}\n`;
-      }
-    });
-
-    report += `\n## Detailed Risk List\n\n`;
-    
-    // Group by risk level
-    const criticalRisks = risks.filter(r => r.inherentRiskScore >= 20);
-    const highRisks = risks.filter(r => r.inherentRiskScore >= 12 && r.inherentRiskScore < 20);
-    const mediumRisks = risks.filter(r => r.inherentRiskScore >= 5 && r.inherentRiskScore < 12);
-    const lowRisks = risks.filter(r => r.inherentRiskScore < 5);
-
-    const formatRiskSection = (title: string, riskList: RiskAssessment[]) => {
-      if (riskList.length === 0) return '';
-      let section = `### ${title} (${riskList.length})\n\n`;
-      riskList.forEach(risk => {
-        const level = this.getRiskLevel(risk.inherentRiskScore);
-        section += `#### ${risk.id}: ${risk.name}\n`;
-        section += `- **Category:** ${risk.category}\n`;
-        section += `- **Status:** ${risk.status}\n`;
-        section += `- **Inherent Risk Score:** ${risk.inherentRiskScore} (${level.level})\n`;
-        section += `- **Residual Risk Score:** ${risk.residualRiskScore}\n`;
-        section += `- **Likelihood:** ${risk.likelihood}/5 | **Impact:** ${risk.impact}/5\n`;
-        section += `- **Treatment:** ${risk.treatment}\n`;
-        section += `- **Owner:** ${risk.owner}\n`;
-        section += `- **Description:** ${risk.description}\n`;
-        if (risk.threatSource) section += `- **Threat Source:** ${risk.threatSource}\n`;
-        if (risk.vulnerabilities?.length) section += `- **Vulnerabilities:** ${risk.vulnerabilities.join(', ')}\n`;
-        if (risk.existingControls?.length) {
-          section += `- **Controls:**\n`;
-          risk.existingControls.forEach(ctrl => {
-            section += `  - ${ctrl.name} (${ctrl.type}, ${((ctrl.effectiveness || 0) * 100).toFixed(0)}% effective)\n`;
-          });
-        }
-        if (risk.treatmentPlan) {
-          section += `- **Treatment Plan:** ${risk.treatmentPlan.description}\n`;
-          section += `  - Target Date: ${risk.treatmentPlan.targetDate}\n`;
-          section += `  - Responsible: ${risk.treatmentPlan.responsibleParty}\n`;
-        }
-        if (risk.quantitativeAssessment) {
-          section += `- **Quantitative Assessment:**\n`;
-          section += `  - Asset Value: $${risk.quantitativeAssessment.assetValue.toLocaleString()}\n`;
-          section += `  - SLE: $${risk.quantitativeAssessment.singleLossExpectancy.toLocaleString()}\n`;
-          section += `  - ALE: $${risk.quantitativeAssessment.annualLossExpectancy.toLocaleString()}\n`;
-          if (risk.quantitativeAssessment.returnOnInvestment !== undefined) {
-            section += `  - Control ROI: ${(risk.quantitativeAssessment.returnOnInvestment * 100).toFixed(1)}%\n`;
-          }
-        }
-        section += `- **Next Review:** ${risk.nextReviewDate}\n\n`;
-      });
-      return section;
-    };
-
-    report += formatRiskSection('🔴 Critical Risks', criticalRisks);
-    report += formatRiskSection('🟠 High Risks', highRisks);
-    report += formatRiskSection('🟡 Medium Risks', mediumRisks);
-    report += formatRiskSection('🟢 Low Risks', lowRisks);
 
     return report;
   }
 
-  /**
-   * Get likelihood description
-   */
   getLikelihoodDescription(likelihood: RiskLikelihood): { name: string; description: string } {
     const descriptions: Record<RiskLikelihood, { name: string; description: string }> = {
-      1: { name: 'Rare', description: 'Event may occur only in exceptional circumstances (< 10% chance annually)' },
-      2: { name: 'Unlikely', description: 'Event could occur but is not expected (10-25% chance annually)' },
-      3: { name: 'Possible', description: 'Event might occur at some time (25-50% chance annually)' },
-      4: { name: 'Likely', description: 'Event will probably occur (50-75% chance annually)' },
-      5: { name: 'Almost Certain', description: 'Event is expected to occur (> 75% chance annually)' }
+      [RiskLikelihood.RARE]: {
+        name: 'Rare',
+        description: 'Event may occur only in exceptional circumstances (<10% annually).'
+      },
+      [RiskLikelihood.UNLIKELY]: {
+        name: 'Unlikely',
+        description: 'Event could occur, but is not expected (10-30% annually).'
+      },
+      [RiskLikelihood.POSSIBLE]: {
+        name: 'Possible',
+        description: 'Event might occur at some point (30-50% annually).'
+      },
+      [RiskLikelihood.LIKELY]: {
+        name: 'Likely',
+        description: 'Event will probably occur (50-70% annually).'
+      },
+      [RiskLikelihood.ALMOST_CERTAIN]: {
+        name: 'Almost Certain',
+        description: 'Event is expected to occur (>70% annually).'
+      }
     };
+
     return descriptions[likelihood];
   }
 
-  /**
-   * Get impact description
-   */
   getImpactDescription(impact: RiskImpact): { name: string; description: string; financial: string } {
     const descriptions: Record<RiskImpact, { name: string; description: string; financial: string }> = {
-      1: { 
-        name: 'Negligible', 
-        description: 'Minor impact with no lasting effect',
+      [RiskImpact.NEGLIGIBLE]: {
+        name: 'Negligible',
+        description: 'Minimal impact with no lasting operational effect.',
         financial: '< $10,000'
       },
-      2: { 
-        name: 'Minor', 
-        description: 'Some impact requiring management attention',
+      [RiskImpact.MINOR]: {
+        name: 'Minor',
+        description: 'Limited impact requiring manager attention.',
         financial: '$10,000 - $100,000'
       },
-      3: { 
-        name: 'Moderate', 
-        description: 'Significant impact requiring senior management attention',
+      [RiskImpact.MODERATE]: {
+        name: 'Moderate',
+        description: 'Material impact requiring coordinated response.',
         financial: '$100,000 - $1,000,000'
       },
-      4: { 
-        name: 'Major', 
-        description: 'Serious impact with potential regulatory or reputational damage',
+      [RiskImpact.MAJOR]: {
+        name: 'Major',
+        description: 'Severe impact with possible regulatory or reputational consequences.',
         financial: '$1,000,000 - $10,000,000'
       },
-      5: { 
-        name: 'Severe', 
-        description: 'Critical impact threatening business viability',
+      [RiskImpact.CATASTROPHIC]: {
+        name: 'Catastrophic',
+        description: 'Critical impact threatening strategic outcomes.',
         financial: '> $10,000,000'
       }
     };
+
     return descriptions[impact];
   }
 
-  /**
-   * Get treatment recommendation based on risk score
-   */
   getTreatmentRecommendation(score: number): { treatment: RiskTreatment; rationale: string }[] {
-    const recommendations: { treatment: RiskTreatment; rationale: string }[] = [];
-
     if (score >= 20) {
-      recommendations.push({
-        treatment: RiskTreatment.MITIGATE,
-        rationale: 'Critical risk requires immediate control implementation'
-      });
-      recommendations.push({
-        treatment: RiskTreatment.AVOID,
-        rationale: 'Consider eliminating the activity that creates this risk'
-      });
-    } else if (score >= 12) {
-      recommendations.push({
-        treatment: RiskTreatment.MITIGATE,
-        rationale: 'High risk should be reduced through additional controls'
-      });
-      recommendations.push({
-        treatment: RiskTreatment.TRANSFER,
-        rationale: 'Consider transferring risk through insurance or contracts'
-      });
-    } else if (score >= 5) {
-      recommendations.push({
-        treatment: RiskTreatment.MITIGATE,
-        rationale: 'Moderate risk may benefit from control improvements'
-      });
-      recommendations.push({
-        treatment: RiskTreatment.ACCEPT,
-        rationale: 'Risk may be acceptable if within risk appetite'
-      });
-    } else {
-      recommendations.push({
-        treatment: RiskTreatment.ACCEPT,
-        rationale: 'Low risk is generally acceptable with monitoring'
-      });
+      return [
+        {
+          treatment: RiskTreatment.MITIGATE,
+          rationale: 'Critical risk requires immediate controls and executive monitoring.'
+        },
+        {
+          treatment: RiskTreatment.AVOID,
+          rationale: 'Consider removing or redesigning the activity driving this risk.'
+        }
+      ];
     }
 
-    return recommendations;
+    if (score >= 12) {
+      return [
+        {
+          treatment: RiskTreatment.MITIGATE,
+          rationale: 'High risk should be reduced with targeted technical and process controls.'
+        },
+        {
+          treatment: RiskTreatment.TRANSFER,
+          rationale: 'Evaluate insurance or contractual transfer where practical.'
+        }
+      ];
+    }
+
+    if (score >= 5) {
+      return [
+        {
+          treatment: RiskTreatment.MITIGATE,
+          rationale: 'Moderate risk benefits from incremental improvements and monitoring.'
+        },
+        {
+          treatment: RiskTreatment.ACCEPT,
+          rationale: 'Risk may be accepted if within defined appetite and ownership is documented.'
+        }
+      ];
+    }
+
+    return [
+      {
+        treatment: RiskTreatment.ACCEPT,
+        rationale: 'Low risk is typically acceptable with periodic review.'
+      }
+    ];
   }
 
-  /**
-   * Delete a risk
-   */
   deleteRisk(id: string): boolean {
     return this.risks.delete(id);
   }
 
-  /**
-   * Clear all risks
-   */
   clearAllRisks(): void {
     this.risks.clear();
+
     if (this.riskRegister) {
       this.riskRegister.risks = [];
+      this.riskRegister.updatedAt = new Date();
     }
   }
-
-  // Private helper methods
 
   private generateId(prefix: string): string {
-    return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
-  private calculateNextReviewDate(riskScore: number, mitigated: boolean = false): string {
-    const today = new Date();
-    let daysToAdd: number;
+  private calculateNextReviewDate(riskScore: number, mitigated: boolean = false): Date {
+    const reviewDate = new Date();
 
     if (mitigated) {
-      daysToAdd = 365; // Annual review for mitigated risks
-    } else if (riskScore >= 20) {
-      daysToAdd = 30; // Monthly for critical
-    } else if (riskScore >= 12) {
-      daysToAdd = 90; // Quarterly for high
-    } else if (riskScore >= 5) {
-      daysToAdd = 180; // Semi-annual for medium
-    } else {
-      daysToAdd = 365; // Annual for low
+      reviewDate.setDate(reviewDate.getDate() + 365);
+      return reviewDate;
     }
 
-    today.setDate(today.getDate() + daysToAdd);
-    return today.toISOString();
+    if (riskScore >= 20) {
+      reviewDate.setDate(reviewDate.getDate() + 30);
+      return reviewDate;
+    }
+
+    if (riskScore >= 12) {
+      reviewDate.setDate(reviewDate.getDate() + 90);
+      return reviewDate;
+    }
+
+    if (riskScore >= 5) {
+      reviewDate.setDate(reviewDate.getDate() + 180);
+      return reviewDate;
+    }
+
+    reviewDate.setDate(reviewDate.getDate() + 365);
+    return reviewDate;
+  }
+
+  private getRiskRating(score: number): 'critical' | 'high' | 'medium' | 'low' {
+    if (score >= 20) {
+      return 'critical';
+    }
+
+    if (score >= 12) {
+      return 'high';
+    }
+
+    if (score >= 5) {
+      return 'medium';
+    }
+
+    return 'low';
+  }
+
+  private composeDescription(
+    description: string,
+    assetName?: string,
+    threatSource?: string,
+    notes?: string
+  ): string {
+    const parts = [description.trim()];
+
+    if (assetName) {
+      parts.push(`Asset: ${assetName}`);
+    }
+
+    if (threatSource) {
+      parts.push(`Threat Source: ${threatSource}`);
+    }
+
+    if (notes) {
+      parts.push(`Notes: ${notes}`);
+    }
+
+    return parts.join('\n');
+  }
+
+  private buildTags(params: { assetId?: string; assetName?: string; vulnerabilities?: string[] }): string[] {
+    const tags: string[] = [];
+
+    if (params.assetId) {
+      tags.push(`asset-id:${params.assetId}`);
+    }
+
+    if (params.assetName) {
+      tags.push(`asset:${params.assetName}`);
+    }
+
+    if (params.vulnerabilities) {
+      params.vulnerabilities.slice(0, 5).forEach(vulnerability => {
+        tags.push(`vuln:${vulnerability}`);
+      });
+    }
+
+    return tags;
+  }
+
+  private normalizeCategory(category: RiskCategory): RiskCategory {
+    const normalized = String(category).toLowerCase();
+    if (normalized === 'security') {
+      return RiskCategory.CYBERSECURITY;
+    }
+    if (normalized === 'third_party') {
+      return RiskCategory.THIRD_PARTY;
+    }
+
+    const categories = Object.values(RiskCategory);
+    return categories.includes(category) ? category : RiskCategory.OPERATIONAL;
+  }
+
+  private getOverallControlEffectiveness(controls: RiskControl[]): RiskAssessment['controlEffectiveness'] {
+    const score = this.calculateControlEffectivenessScore(controls);
+
+    if (score >= 0.75) {
+      return 'effective';
+    }
+    if (score >= 0.4) {
+      return 'partially-effective';
+    }
+    if (controls.length === 0) {
+      return 'not-assessed';
+    }
+
+    return 'ineffective';
+  }
+
+  private calculateControlEffectivenessScore(controls: RiskControl[]): number {
+    if (controls.length === 0) {
+      return 0;
+    }
+
+    const total = controls.reduce((sum, control) => {
+      const effectiveness = this.normalizeEffectiveness(control.effectiveness);
+      return sum + effectiveness;
+    }, 0);
+
+    return total / controls.length;
+  }
+
+  private normalizeEffectiveness(effectiveness: RiskControl['effectiveness']): number {
+    switch (effectiveness) {
+      case 'effective':
+        return 1;
+      case 'partially-effective':
+        return 0.6;
+      case 'ineffective':
+      default:
+        return 0.2;
+    }
   }
 }
 
-// Export singleton instance
 export const riskAssessmentService = new RiskAssessmentService();
 
 export default RiskAssessmentService;

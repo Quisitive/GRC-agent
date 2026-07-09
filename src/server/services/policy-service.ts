@@ -9,15 +9,29 @@ import {
   ComplianceFramework
 } from '../types/framework.js';
 import FrameworkRegistry from '../frameworks/index.js';
+import { localStoreService } from './local-store-service.js';
+import ImprovementPlaybookService from './improvement-playbook-service.js';
 
 export class PolicyService {
   private policies: Map<string, PolicyDocument> = new Map();
+  private improvementPlaybookService: ImprovementPlaybookService;
+
+  constructor() {
+    this.improvementPlaybookService = new ImprovementPlaybookService();
+    localStoreService.getPolicies().forEach(policy => {
+      this.policies.set(policy.id, policy);
+    });
+  }
 
   async generatePolicy(request: PolicyGenerationRequest): Promise<PolicyDocument> {
     const id = uuidv4();
     const now = new Date();
+    const injection = this.improvementPlaybookService.buildInjectionBrief({
+      frameworks: request.frameworks,
+      limit: 3
+    });
 
-    const content = await this.generatePolicyContent(request);
+    const content = await this.generatePolicyContent(request, injection.guidance);
 
     const policy: PolicyDocument = {
       id,
@@ -32,10 +46,24 @@ export class PolicyService {
     };
 
     this.policies.set(id, policy);
+    this.persist();
+
+    if (injection.insightIds.length > 0) {
+      this.improvementPlaybookService.recordInjectionOutcome({
+        artifactType: 'policy',
+        artifactId: policy.id,
+        artifactTitle: policy.title,
+        organization: policy.organization,
+        frameworks: request.frameworks,
+        injectedInsightIds: injection.insightIds,
+        injectionSummary: injection.guidance
+      });
+    }
+
     return policy;
   }
 
-  private async generatePolicyContent(request: PolicyGenerationRequest): Promise<string> {
+  private async generatePolicyContent(request: PolicyGenerationRequest, injectionGuidance?: string): Promise<string> {
     const frameworks = request.frameworks.map(f => {
       const fw = FrameworkRegistry.getFramework(f);
       return fw?.name || f;
@@ -84,6 +112,14 @@ Violations of this policy may result in disciplinary action up to and including 
 
 This policy shall be reviewed annually or when regulatory requirements change.
 
+${injectionGuidance ? `## 7. Continuous Improvement Guidance
+
+Use the following curated lessons-learned recommendations when implementing and reviewing this policy:
+
+${injectionGuidance}
+
+` : ''}
+
 ---
 **Status:** Draft
 **Version:** 1.0.0
@@ -116,11 +152,16 @@ This policy shall be reviewed annually or when regulatory requirements change.
     };
 
     this.policies.set(id, updated);
+    this.persist();
     return updated;
   }
 
   deletePolicy(id: string): boolean {
-    return this.policies.delete(id);
+    const deleted = this.policies.delete(id);
+    if (deleted) {
+      this.persist();
+    }
+    return deleted;
   }
 
   exportPolicyAsMarkdown(id: string): string | undefined {
@@ -152,6 +193,10 @@ This policy shall be reviewed annually or when regulatory requirements change.
     return this.updatePolicy(id, {
       status: 'published'
     });
+  }
+
+  private persist(): void {
+    localStoreService.setPolicies(Array.from(this.policies.values()));
   }
 }
 
