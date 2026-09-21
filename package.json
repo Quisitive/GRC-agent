@@ -34,27 +34,27 @@
   "license": "MIT",
   "dependencies": {
     "@azure/openai": "^2.0.0",
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "botbuilder": "^4.22.0",
     "botbuilder-azure": "^4.22.0",
     "cors": "^2.8.5",
     "express": "^5.2.1",
     "uuid": "^14.0.2",
     "xlsx": "^0.18.5",
-    "zod": "^4.3.6"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.5.0",
+    "@types/node": "^26.6.1",
     "@types/uuid": "^11.0.0",
-    "concurrently": "^9.2.1",
-    "dotenv": "^17.3.1",
-    "eslint": "^10.1.0",
-    "marked": "^18.0.5",
-    "tsx": "^4.7.0",
-    "typescript": "^6.0.2",
+    "concurrently": "^10.0.5",
+    "dotenv": "^18.0.0",
+    "eslint": "^10.10.0",
+    "marked": "^18.0.13",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vitest": "^4.1.2"
+    "vitest": "^5.0.1"
   }
 }
