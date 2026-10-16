@@ -34,7 +34,7 @@
   "license": "MIT",
   "dependencies": {
     "@azure/openai": "^2.0.0",
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "botbuilder": "^4.22.0",
     "botbuilder-azure": "^4.22.0",
     "cors": "^2.8.5",
