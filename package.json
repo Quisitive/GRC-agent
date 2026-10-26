@@ -49,12 +49,12 @@
     "@types/node": "^26.6.5",
     "@types/uuid": "^11.0.0",
     "concurrently": "^10.0.6",
-    "dotenv": "^18.0.7",
-    "eslint": "^10.12.0",
+    "dotenv": "^18.0.9",
+    "eslint": "^10.13.0",
     "marked": "^18.1.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4",
+    "vite": "^8.3.5",
     "vitest": "^5.0.5"
   }
 }
