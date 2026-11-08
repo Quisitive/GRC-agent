@@ -70,7 +70,7 @@ export const nist80053Controls: Record<string, ControlRequirement> = {
     description: 'The organization monitors the information system and its environment of operation for attacks and indicators of potential attacks.',
     implementation: 'Deploy monitoring tools, configure alerting, establish baseline metrics, and analyze logs for suspicious activity.',
     assessment: 'Verify monitoring tool deployment and review detected security events.',
-    relatedControls: ['AU-13', 'DE.AE-01', 'SI-2']
+    relatedControls: ['AU-13', 'DE.AE-02', 'SI-2']
   }
 };
 
