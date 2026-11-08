@@ -1027,7 +1027,7 @@ app.get('/api/grc/analytics/framework-comparison', (req: Request, res: Response)
     // Categorize controls by category for each framework
     const inferCategory = (ctrl: { id: string; title: string; category?: string }, frameworkId: string): string => {
       if (ctrl.category) return ctrl.category;
-      // CSF: GV.RO-01 → GV (Govern), PR.AC-01 → PR (Protect)
+      // CSF: GV.RR-01 → GV (Govern), PR.AA-05 → PR (Protect)
       if (frameworkId === 'nist-csf') {
         const prefix = ctrl.id.split('.')[0];
         const names: Record<string, string> = { GV: 'Govern', ID: 'Identify', PR: 'Protect', DE: 'Detect', RS: 'Respond', RC: 'Recover' };
@@ -2257,7 +2257,7 @@ app.post('/api/grc/analytics/cross-framework-coverage', (req: Request, res: Resp
 
     // 2. From cross-framework mappings (domain-level → CSF categories/subcategories)
     for (const [csfRef, otherControls] of Object.entries(csfToOtherFrameworks)) {
-      // csfRef might be a category (e.g. 'PR.AC-01') or just partial
+      // csfRef might be a category (e.g. 'PR.AA-05') or just partial
       // Map it to any matching subcategory
       const csfUpper = csfRef.toUpperCase().replace(/\s+/g, '');
       for (const [, func] of Object.entries(csfTaxonomy)) {

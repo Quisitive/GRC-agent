@@ -24,7 +24,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.1', 'CIS.1.1', 'CIS.1.2', 'CIS.1.3', 'CIS.2', 'CIS.2.1'],
       [ComplianceFramework.HITRUST]: ['07.a', '07.b'],
-      [ComplianceFramework.NIST_CSF]: ['GV.RO-01'],
+      [ComplianceFramework.NIST_CSF]: ['ID.AM-01', 'ID.AM-02'],
       [ComplianceFramework.NIST_800_53]: ['CM-8', 'PM-5'],
       [ComplianceFramework.NIST_800_171]: ['3.4.1'],
       [ComplianceFramework.HIPAA]: ['164.310(d)(1)'],
@@ -40,7 +40,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.5', 'CIS.6'],
       [ComplianceFramework.HITRUST]: ['01.a', '01.b', '01.c', '01.d', '01.e', '01.f'],
-      [ComplianceFramework.NIST_CSF]: ['PR.AC-01'],
+      [ComplianceFramework.NIST_CSF]: ['PR.AA-03', 'PR.AA-05'],
       [ComplianceFramework.NIST_800_53]: ['AC-1', 'AC-2', 'AC-3', 'AC-6'],
       [ComplianceFramework.NIST_800_171]: ['3.1.1', '3.1.2', '3.1.5', '3.1.7'],
       [ComplianceFramework.HIPAA]: ['164.312(a)(1)', '164.312(d)'],
@@ -60,7 +60,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.14'],
       [ComplianceFramework.HITRUST]: ['02.a', '02.b', '02.c', '02.d', '02.e'],
-      [ComplianceFramework.NIST_CSF]: ['GV.RO-01'],
+      [ComplianceFramework.NIST_CSF]: ['PR.AT-01', 'PR.AT-02'],
       [ComplianceFramework.NIST_800_53]: ['AT-1', 'AT-2', 'AT-3'],
       [ComplianceFramework.NIST_800_171]: ['3.2.1', '3.2.2'],
       [ComplianceFramework.HIPAA]: ['164.308(a)(5)'],
@@ -79,7 +79,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.3'],
       [ComplianceFramework.HITRUST]: ['06.a', '06.b', '06.c', '06.d'],
-      [ComplianceFramework.NIST_CSF]: ['PR.AC-01'],
+      [ComplianceFramework.NIST_CSF]: ['PR.DS-01', 'PR.DS-02'],
       [ComplianceFramework.NIST_800_53]: ['SC-8', 'SC-13', 'SC-28'],
       [ComplianceFramework.NIST_800_171]: ['3.13.8'],
       [ComplianceFramework.HIPAA]: ['164.312(a)(2)(iv)', '164.312(e)(1)'],
@@ -101,7 +101,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.7'],
       [ComplianceFramework.HITRUST]: ['10.a', '10.b', '10.c'],
-      [ComplianceFramework.NIST_CSF]: ['DE.AE-01'],
+      [ComplianceFramework.NIST_CSF]: ['ID.RA-01'],
       [ComplianceFramework.NIST_800_53]: ['RA-5', 'SI-2'],
       [ComplianceFramework.NIST_800_171]: ['3.14.1'],
       [ComplianceFramework.HIPAA]: ['164.308(a)(1)'],
@@ -119,7 +119,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.4'],
       [ComplianceFramework.HITRUST]: ['10.h', '10.i'],
-      [ComplianceFramework.NIST_CSF]: ['PR.AC-01'],
+      [ComplianceFramework.NIST_CSF]: ['PR.PS-01'],
       [ComplianceFramework.NIST_800_53]: ['CM-2', 'CM-6', 'CM-7'],
       [ComplianceFramework.NIST_800_171]: ['3.4.1', '3.4.2'],
       [ComplianceFramework.SOC2]: ['CC6.6'],
@@ -134,7 +134,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.8'],
       [ComplianceFramework.HITRUST]: ['09.aa', '09.ab', '09.ac', '09.ad'],
-      [ComplianceFramework.NIST_CSF]: ['DE.AE-01'],
+      [ComplianceFramework.NIST_CSF]: ['DE.AE-02', 'DE.CM-03'],
       [ComplianceFramework.NIST_800_53]: ['AU-2', 'AU-3', 'AU-6', 'AU-12'],
       [ComplianceFramework.NIST_800_171]: ['3.3.1', '3.3.2'],
       [ComplianceFramework.HIPAA]: ['164.312(b)'],
@@ -154,7 +154,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.12', 'CIS.13'],
       [ComplianceFramework.HITRUST]: ['09.m', '09.n'],
-      [ComplianceFramework.NIST_CSF]: ['DE.AE-01'],
+      [ComplianceFramework.NIST_CSF]: ['DE.CM-01', 'PR.IR-01'],
       [ComplianceFramework.NIST_800_53]: ['SC-7', 'AC-4'],
       [ComplianceFramework.NIST_800_171]: ['3.13.1'],
       [ComplianceFramework.HIPAA]: ['164.312(e)(1)'],
@@ -172,7 +172,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.17'],
       [ComplianceFramework.HITRUST]: ['11.a', '11.b', '11.c', '11.d', '11.e'],
-      [ComplianceFramework.NIST_CSF]: ['RS.RP-01'],
+      [ComplianceFramework.NIST_CSF]: ['RS.MA-01'],
       [ComplianceFramework.NIST_800_53]: ['IR-1', 'IR-2', 'IR-4', 'IR-5', 'IR-6'],
       [ComplianceFramework.NIST_800_171]: ['3.6.1', '3.6.2'],
       [ComplianceFramework.HIPAA]: ['164.308(a)(6)'],
@@ -194,7 +194,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.11'],
       [ComplianceFramework.HITRUST]: ['12.a', '12.b', '12.c', '12.d', '12.e'],
-      [ComplianceFramework.NIST_CSF]: ['RC.RP-01'],
+      [ComplianceFramework.NIST_CSF]: ['RC.RP-01', 'RC.RP-03'],
       [ComplianceFramework.NIST_800_53]: ['CP-1', 'CP-2', 'CP-4', 'CP-9', 'CP-10'],
       [ComplianceFramework.HIPAA]: ['164.308(a)(7)'],
       [ComplianceFramework.SOC2]: ['A1.2', 'A1.3'],
@@ -210,7 +210,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.1', 'CIS.2'],
       [ComplianceFramework.HITRUST]: ['03.a', '03.b', '03.c', '03.d'],
-      [ComplianceFramework.NIST_CSF]: ['GV.RO-01', 'GV.PO-01'],
+      [ComplianceFramework.NIST_CSF]: ['GV.RM-03', 'GV.RM-06'],
       [ComplianceFramework.NIST_800_53]: ['RA-1', 'RA-2', 'RA-3'],
       [ComplianceFramework.NIST_800_171]: ['3.11.1', '3.12.1'],
       [ComplianceFramework.HIPAA]: ['164.308(a)(1)(ii)(A)'],
@@ -231,7 +231,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.15'],
       [ComplianceFramework.HITRUST]: ['00.a', '00.b'],
-      [ComplianceFramework.NIST_CSF]: ['GV.PO-01', 'GV.RO-01'],
+      [ComplianceFramework.NIST_CSF]: ['GV.PO-01', 'GV.RR-01'],
       [ComplianceFramework.NIST_800_53]: ['PL-1', 'PL-2', 'PM-1'],
       [ComplianceFramework.HIPAA]: ['164.308(a)(1)'],
       [ComplianceFramework.SOC2]: ['CC1.1', 'CC1.2', 'CC1.3'],
@@ -248,7 +248,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.15'],
       [ComplianceFramework.HITRUST]: ['05.a', '05.b', '05.c', '05.d'],
-      [ComplianceFramework.NIST_CSF]: ['GV.RO-01'],
+      [ComplianceFramework.NIST_CSF]: ['GV.SC-04', 'GV.SC-06'],
       [ComplianceFramework.NIST_800_53]: ['SA-4', 'SA-9', 'PS-7'],
       [ComplianceFramework.HIPAA]: ['164.308(b)(1)'],
       [ComplianceFramework.SOC2]: ['CC9.2'],
@@ -263,7 +263,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.1'],
       [ComplianceFramework.HITRUST]: ['08.a', '08.b', '08.c', '08.d'],
-      [ComplianceFramework.NIST_CSF]: ['PR.AC-01'],
+      [ComplianceFramework.NIST_CSF]: ['PR.AA-06', 'DE.CM-02'],
       [ComplianceFramework.NIST_800_53]: ['PE-1', 'PE-2', 'PE-3', 'PE-6'],
       [ComplianceFramework.HIPAA]: ['164.310(a)(1)', '164.310(a)(2)'],
       [ComplianceFramework.SOC2]: ['CC6.4'],
@@ -278,7 +278,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.9', 'CIS.10'],
       [ComplianceFramework.HITRUST]: ['09.j', '09.k'],
-      [ComplianceFramework.NIST_CSF]: ['DE.AE-01'],
+      [ComplianceFramework.NIST_CSF]: ['DE.CM-09'],
       [ComplianceFramework.NIST_800_53]: ['SI-3', 'SC-18'],
       [ComplianceFramework.NIST_800_171]: ['3.14.2'],
       [ComplianceFramework.HIPAA]: ['164.308(a)(5)(ii)(B)'],
@@ -293,7 +293,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.2'],
       [ComplianceFramework.HITRUST]: ['10.h'],
-      [ComplianceFramework.NIST_CSF]: ['PR.AC-01'],
+      [ComplianceFramework.NIST_CSF]: ['ID.RA-07', 'PR.PS-01'],
       [ComplianceFramework.NIST_800_53]: ['CM-3', 'CM-4', 'CM-5'],
       [ComplianceFramework.SOC2]: ['CC8.1'],
       [ComplianceFramework.PCI_DSS]: ['PCI.6.4'],
@@ -306,7 +306,7 @@ export const crossFrameworkMappings: CrossMapping[] = [
     controls: {
       [ComplianceFramework.CIS_CONTROLS]: ['CIS.3'],
       [ComplianceFramework.HITRUST]: ['13.a', '13.b', '13.c'],
-      [ComplianceFramework.NIST_CSF]: ['GV.PO-01'],
+      [ComplianceFramework.NIST_CSF]: ['GV.OC-03'],
       [ComplianceFramework.NIST_800_53]: ['AP-1', 'AP-2', 'IP-1', 'IP-2'],
       [ComplianceFramework.HIPAA]: ['164.524', '164.526'],
       [ComplianceFramework.GDPR]: ['Art.15', 'Art.16', 'Art.17', 'Art.20'],
